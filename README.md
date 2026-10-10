@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="assets/icon.png" width="112" alt="Colorblind Helper icon">
+  <img src="assets/icon.png" width="120" alt="Colorblind Helper icon">
 </p>
 
 <h1 align="center">Colorblind Helper</h1>
 
 <p align="center">
-  A tiny always-on-top overlay that <b>names the colour under your cursor</b>.<br>
-  Built for colour-blind folks. Windows &amp; macOS.
+  <i>For colour-blind artists, with love from Vincent's palette.</i><br>
+  A small always-on-top overlay that <b>names the colour under your cursor</b>. Windows &amp; macOS.
 </p>
 
 <p align="center">
@@ -14,29 +14,40 @@
 </p>
 
 <p align="center">
-  <img src="docs/settings-starry.png" width="49%" alt="Settings, Starry Night theme">
-  <img src="docs/settings-sakura.png" width="49%" alt="Settings, Sakura theme">
+  <img src="docs/settings-starry.png" width="49%" alt="Settings in the Starry Night theme">
+  <img src="docs/vision.png" width="49%" alt="Vincent's self-portrait through different kinds of colour vision">
 </p>
 
-## Features
+## What it does
 
-- **Live colour under the cursor:** HEX, RGB and the closest named colour (CIEDE2000 matching).
-- **Descriptive mode:** plain-language names like *"Light muted teal"*, *"Dark brown"* or
-  *"Pale pink"*, plus HSL, HSV, CMYK and contrast ratios.
-- **Colour-vision simulations:** pick any mix of **protan, deutan, tritan and achromat**
-  to see how the colour looks with each one. You can toggle them from the menu without it closing.
-- **Follows your cursor** (click-through), or **detach it** and drag it anywhere.
-- **Themes:** *Starry Night* and *Sunflowers* (Van Gogh), *Sakura*, *Matcha*, *Midnight*,
-  *Daylight*. The settings window and the overlay can each have their own theme, and
-  both come with gentle animated decorations.
-- **Customise everything:** opacity, size, swatch, roundness, font, which fields show,
-  1×1 / 3×3 / 5×5 sampling, refresh rate.
-- **Global hotkeys** that you set by pressing the keys.
-- **Run at startup** (off by default), single instance, tray / menu-bar app.
-- Light on resources: about 1% of one CPU core while idle.
+- **Names every colour you point at:** HEX, RGB and the closest named colour (CIEDE2000).
+- **Descriptive mode:** gives the full story of a colour in plain words (*"Light muted teal"*,
+  *"Dark brown"*), plus HSL, HSV, CMYK and contrast ratios.
+- **Through other eyes:** shows how the colour reads for **protan, deutan, tritan and
+  achromat** vision, in any combination you choose. The Vision page also shows Vincent's 1887
+  self-portrait (a red beard against a green ground) through each kind of colour vision.
+- **Your palette:** every colour you copy is kept as a paint dab. Click a dab to copy it again,
+  or export the whole palette as a `.gpl` file for GIMP, Krita or Inkscape.
+- **Live in a painting:** themes come from *The Starry Night*, *Café Terrace at Night*,
+  *Irises*, *Sunflowers*, *Almond Blossom*, *Wheat Field with Cypresses* and *The Bedroom*.
+  There are also two plain studio themes, *Charcoal* and *Linen*.
+  - Each palette is sampled from the canvas itself.
+  - The banner shows the painting drifting slowly, with a museum-style caption.
+  - The studio themes show the paintings in turn.
+- **Follows your brush:** the overlay sticks to the cursor and lets clicks pass through it.
+  You can also detach it and park it anywhere.
+- **Customise it:** set opacity, size, swatch size, corner roundness and font, choose which fields
+  to show, sample 1×1, 3×3 or 5×5 pixels, and set hotkeys by pressing the keys.
+- Run at startup (off by default), lives in the tray, runs only one copy at a time, and uses
+  about 1% of one CPU core while idle.
 
 <p align="center">
-  <img src="docs/overlays.png" width="70%" alt="Overlay themes, compact and descriptive">
+  <img src="docs/overlays.png" width="62%" alt="The overlay in every theme, compact and descriptive">
+</p>
+
+<p align="center">
+  <img src="docs/palette.png" width="49%" alt="The artist's palette">
+  <img src="docs/settings-linen.png" width="49%" alt="Linen studio theme">
 </p>
 
 ## Install
@@ -46,12 +57,12 @@
 There is no installer. SmartScreen may warn you because the exe is unsigned: choose
 *More info → Run anyway*.
 
-**macOS:** download `ColorblindHelper-macOS.zip`, unzip it, and move the app to
-Applications. The app is unsigned, so the first time you open it, right-click it and choose *Open*. Then allow
+**macOS:** download `ColorblindHelper-macOS.zip`, unzip it and move the app to Applications.
+The app is unsigned, so the first time you open it, right-click it and choose *Open*. Then allow
 **Screen Recording** (and **Accessibility** if you want global hotkeys) in
 *System Settings → Privacy & Security*, and restart the app.
 
-**From source** (any OS, Python 3.10+):
+**From source** (Python 3.10 or newer):
 
 ```bash
 pip install -r requirements.txt
@@ -60,18 +71,33 @@ python main.py
 
 ## Using it
 
-| Action                     | Global hotkey | Overlay focused |
-|----------------------------|---------------|-----------------|
-| Copy HEX                   | Ctrl+Shift+C  | C               |
-| Freeze / unfreeze          | Ctrl+Shift+F  | Space           |
-| Follow cursor on / off     | Ctrl+Shift+A  | A               |
-| Descriptive mode on / off  | Ctrl+Shift+D  | D / double-click|
-| Show / hide overlay        | Ctrl+Shift+H  | Esc (hide)      |
+| Action                         | Global hotkey | Overlay focused  |
+|--------------------------------|---------------|------------------|
+| Copy HEX (and add to palette)  | Ctrl+Shift+C  | C                |
+| Freeze / unfreeze              | Ctrl+Shift+F  | Space            |
+| Follow cursor on / off         | Ctrl+Shift+A  | A                |
+| Descriptive mode on / off      | Ctrl+Shift+D  | D / double-click |
+| Show / hide overlay            | Ctrl+Shift+H  | Esc (hide)       |
 
-You can also right-click the tray icon or the overlay for the menu. Scroll over a detached overlay to
-resize it. Double-click the tray icon to open settings.
+You can also right-click the tray icon or the overlay for the menu. Double-click the tray icon to open settings.
 
-<p align="center"><img src="docs/vision.png" width="70%" alt="Vision settings"></p>
+## The paintings
+
+All the paintings are by Vincent van Gogh (1853–1890) and are in the public domain. The scans come from
+Wikimedia Commons:
+
+| Painting | Year | Collection |
+|---|---|---|
+| [The Starry Night](https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg) | 1889 | Museum of Modern Art, New York |
+| [Café Terrace at Night](https://commons.wikimedia.org/wiki/File:Vincent_Willem_van_Gogh_-_Cafe_Terrace_at_Night_(Yorck).jpg) | 1888 | Kröller-Müller Museum, Otterlo |
+| [Irises](https://commons.wikimedia.org/wiki/File:Irises-Vincent_van_Gogh.jpg) | 1889 | J. Paul Getty Museum, Los Angeles |
+| [Sunflowers](https://commons.wikimedia.org/wiki/File:Vincent_Willem_van_Gogh_127.jpg) | 1888 | National Gallery, London |
+| [Almond Blossom](https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_Almond_blossom_-_Google_Art_Project.jpg) | 1890 | Van Gogh Museum, Amsterdam |
+| [Wheat Field with Cypresses](https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_Wheat_Field_with_Cypresses_-_Google_Art_Project.jpg) | 1889 | Metropolitan Museum of Art, New York |
+| [The Bedroom](https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_De_slaapkamer_-_Google_Art_Project.jpg) | 1888 | Van Gogh Museum, Amsterdam |
+| [Self-Portrait](https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_(454045).jpg) | 1887 | Art Institute of Chicago |
+
+The quotes in the sidebar come from Vincent's letters to his brother Theo.
 
 ## Build
 
@@ -83,26 +109,28 @@ python -m PyInstaller --noconfirm ColorblindHelper.spec
 
 This produces `dist/ColorblindHelper.exe` on Windows and `dist/ColorblindHelper.app` on macOS. Publishing a GitHub
 release also builds both automatically ([workflow](.github/workflows/release.yml)).
+`tools/prepare_paintings.py` turns the full-size scans into the bundled 1400 px JPEGs.
 
 ## Project layout
 
 ```
 colorblind_helper/
-  app.py              tray, menus, hotkeys, single instance, wiring
+  app.py              tray, menus, hotkeys, single instance, palette, wiring
   overlay.py          overlay window + renderer (shared with the live preview)
-  settings_window.py  settings UI (sidebar, banner, cards)
-  widgets.py          toggle switch, theme cards, hotkey recorder, live preview
-  themes.py           themes, Qt stylesheets, animated decorations
+  settings_window.py  the settings window
+  widgets.py          gallery banner, theme cards, toggles, palette dabs, hotkey recorder
+  paintings.py        painting metadata, crops, blur, colour-vision image simulation
+  themes.py           painting-derived themes, typography, canvas texture, stylesheets
   colors.py           conversions, naming, descriptions, CVD simulation
   pixel.py            screen sampling (GDI on Windows, Qt elsewhere)
   autostart.py        run at login (registry / LaunchAgent / XDG)
   settings.py         persisted settings
   hotkeys.py          global hotkeys (pynput)
-  icon.py             app icon, drawn in code
+  icon.py             app icon (a Starry Night crop with a colour-wheel iris)
 ```
 
 Colour-vision simulation uses the Machado, Oliveira &amp; Fernandes (2009) model.
 
 ## License
 
-MIT
+The code is MIT licensed. The paintings are in the public domain.

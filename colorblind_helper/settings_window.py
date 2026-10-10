@@ -1,49 +1,55 @@
-"""The settings window: sidebar navigation, animated themed banner with a live
-overlay preview, and card-based pages. Every control applies immediately."""
+"""The settings window, styled like a small gallery: a painted backdrop, a
+drifting painting banner with a museum label, and card-based pages."""
 from __future__ import annotations
 
 import os
 
-from PySide6.QtCore import QSize, Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QFont
-from PySide6.QtWidgets import (QButtonGroup, QFontComboBox, QFrame, QGridLayout, QHBoxLayout,
-                               QLabel, QPushButton, QScrollArea, QSlider, QSpinBox,
-                               QStackedWidget, QVBoxLayout, QWidget)
+from PySide6.QtCore import QRectF, QSize, Qt, QTimer, QUrl, Signal
+from PySide6.QtGui import QColor, QDesktopServices, QFont, QPainter, QPainterPath
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QFileDialog, QFontComboBox, QFrame,
+                               QGridLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea,
+                               QSlider, QSpinBox, QStackedWidget, QVBoxLayout, QWidget)
 
 from . import __version__
 from .colors import CVD_LABELS
 from .icon import app_icon, icon_pixmap
+from .paintings import PAINTINGS, QUOTES, blurred_image, cover_image
 from .settings import Settings, settings_path
-from .themes import MATCH, THEMES, get_theme, palette_for, window_stylesheet
-from .widgets import (Banner, CvdStrip, HotkeyRecorder, ThemeCard, ToggleSwitch, card, row,
-                      section, set_active_theme)
+from .themes import MATCH, THEMES, get_theme, paint_canvas, palette_for, window_stylesheet
+from .widgets import (Banner, CvdStrip, HotkeyRecorder, PaintedPanel, PaintingThumb,
+                      PaletteGrid, ThemeCard, ToggleSwitch, card, row, section,
+                      set_active_theme)
 
 REPO_URL = "https://github.com/xilla420/ColorblindHelper"
 
 _CVD_DESC = {
     "protan": "Weak or missing red cones · about 1% of men",
-    "deutan": "Weak or missing green cones · most common, about 5% of men",
+    "deutan": "Weak or missing green cones · the most common, about 5% of men",
     "tritan": "Weak or missing blue cones · rare",
-    "achroma": "Sees brightness only, no hue · very rare",
+    "achroma": "Sees light and shade only · very rare",
 }
 
 PAGES = [
-    ("appearance", "\U0001F3A8   Appearance", "Appearance",
-     "Pick a look for this window and for the floating overlay."),
-    ("overlay", "\U0001F50D   Overlay", "Overlay",
-     "What the colour card shows, and how it follows you around."),
-    ("vision", "\U0001F453   Vision", "Colour vision",
-     "Choose which colour-blind simulations appear in descriptive mode."),
+    ("appearance", "\U0001F5BC️   Appearance", "Appearance",
+     "Choose a painting to live in — for this window and for the overlay."),
+    ("overlay", "\U0001F50D   Overlay", "The overlay",
+     "What the colour card shows, and how it follows your brush."),
+    ("vision", "\U0001F441️   Vision", "Through other eyes",
+     "How colours — and Van Gogh — look with each kind of colour vision."),
+    ("palette", "\U0001F3A8   Palette", "Your palette",
+     "Every colour you copy is kept here, ready to reuse."),
     ("shortcuts", "⌨️   Shortcuts", "Shortcuts",
-     "Global hotkeys that work from any app."),
+     "Global hotkeys that work from any app, mid-stroke."),
     ("general", "⚙️   General", "General",
-     "Startup, sampling and everything else."),
+     "Startup, sampling, and the paintings behind the app."),
 ]
 
 
 class SettingsWindow(QWidget):
     changed = Signal()
     quitRequested = Signal()
+    copyRequested = Signal(str)       # hex from the palette page
+    paletteChanged = Signal()
 
     def __init__(self, settings: Settings, hotkeys_available: bool) -> None:
         super().__init__(None)
@@ -51,13 +57,13 @@ class SettingsWindow(QWidget):
         self._hotkeys_available = hotkeys_available
         self._refreshers: list = []
         self._strips: list[CvdStrip] = []
+        self._thumbs: list[PaintingThumb] = []
 
         self.setObjectName("SettingsRoot")
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setWindowTitle("Colorblind Helper")
         self.setWindowIcon(app_icon())
-        self.resize(780, 580)
-        self.setMinimumSize(700, 480)
+        self.resize(880, 650)
+        self.setMinimumSize(830, 540)
 
         root = QHBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -79,19 +85,35 @@ class SettingsWindow(QWidget):
         self.apply_theme()
         self.refresh()
 
+    # ------------------------------------------------------------------ backdrop
+    def paintEvent(self, _e) -> None:
+        t = get_theme(self.settings.ui_theme)
+        p = QPainter(self)
+        r = QRectF(self.rect())
+        if t.painting:
+            dpr = max(1.0, self.devicePixelRatioF())
+            p.drawImage(r, blurred_image(t.painting, int(r.width() * dpr / 3) + 1,
+                                         int(r.height() * dpr / 3) + 1))
+            tint = QColor(t.bg)
+            tint.setAlphaF(0.88)
+            p.fillRect(r, tint)
+        else:
+            paint_canvas(p, r, t)
+        p.end()
+
     # ------------------------------------------------------------------ chrome
     def _sidebar(self) -> QWidget:
-        side = QFrame()
-        side.setObjectName("Sidebar")
-        side.setFixedWidth(184)
+        side = PaintedPanel(tint_alpha=0.80, border_right=True)
+        side.setFixedWidth(196)
         lay = QVBoxLayout(side)
-        lay.setContentsMargins(12, 16, 12, 14)
+        lay.setContentsMargins(12, 18, 12, 14)
         lay.setSpacing(4)
 
         brand = QHBoxLayout()
+        brand.setSpacing(10)
         logo = QLabel()
         dpr = max(1.0, self.devicePixelRatioF())
-        pm = icon_pixmap(int(38 * dpr))
+        pm = icon_pixmap(int(40 * dpr))
         pm.setDevicePixelRatio(dpr)
         logo.setPixmap(pm)
         brand.addWidget(logo)
@@ -99,7 +121,7 @@ class SettingsWindow(QWidget):
         name.setObjectName("appName")
         brand.addWidget(name, 1)
         lay.addLayout(brand)
-        lay.addSpacing(14)
+        lay.addSpacing(16)
 
         group = QButtonGroup(self)
         group.setExclusive(True)
@@ -115,14 +137,38 @@ class SettingsWindow(QWidget):
             self._nav_buttons.append(b)
         lay.addStretch(1)
 
+        self._quote = QLabel()
+        self._quote.setObjectName("quote")
+        self._quote.setWordWrap(True)
+        self._quote_src = QLabel()
+        self._quote_src.setObjectName("caption")
+        self._quote_src.setWordWrap(True)
+        lay.addWidget(self._quote)
+        lay.addWidget(self._quote_src)
+        lay.addSpacing(10)
+        self._quote_idx = -1
+        self._next_quote()
+        timer = QTimer(self)
+        timer.timeout.connect(self._next_quote)
+        timer.start(30000)
+
+        bottom = QHBoxLayout()
         ver = QLabel(f"v{__version__}")
         ver.setObjectName("muted")
-        lay.addWidget(ver)
-        quit_btn = QPushButton("Quit app")
+        bottom.addWidget(ver)
+        bottom.addStretch(1)
+        quit_btn = QPushButton("Quit")
         quit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         quit_btn.clicked.connect(self.quitRequested.emit)
-        lay.addWidget(quit_btn)
+        bottom.addWidget(quit_btn)
+        lay.addLayout(bottom)
         return side
+
+    def _next_quote(self) -> None:
+        self._quote_idx = (self._quote_idx + 1) % len(QUOTES)
+        text, src = QUOTES[self._quote_idx]
+        self._quote.setText(f"“{text}”")
+        self._quote_src.setText(f"— Vincent, {src}")
 
     def _scroll(self, page: QWidget) -> QScrollArea:
         sa = QScrollArea()
@@ -135,7 +181,7 @@ class SettingsWindow(QWidget):
     def _page(self) -> tuple[QWidget, QVBoxLayout]:
         w = QWidget()
         lay = QVBoxLayout(w)
-        lay.setContentsMargins(22, 14, 22, 22)
+        lay.setContentsMargins(24, 14, 24, 24)
         lay.setSpacing(8)
         return w, lay
 
@@ -152,21 +198,22 @@ class SettingsWindow(QWidget):
     # ------------------------------------------------------------------ pages
     def _page_appearance(self) -> QWidget:
         w, lay = self._page()
-        lay.addWidget(section("App theme"))
+        lay.addWidget(section("Window"))
         lay.addWidget(self._theme_grid("ui_theme", list(THEMES)))
-        lay.addSpacing(6)
-        lay.addWidget(section("Overlay theme"))
+        lay.addSpacing(4)
+        lay.addWidget(section("Overlay"))
         lay.addWidget(self._theme_grid("overlay_theme", [MATCH, *THEMES]))
-        lay.addSpacing(6)
-        lay.addWidget(section("Style"))
+        lay.addSpacing(4)
+        lay.addWidget(section("Finish"))
         lay.addWidget(card(
-            row("Animated decorations", self._toggle("decorations"),
-                "Twinkling stars, drifting petals and friends."),
+            row("Painted textures & motion", self._toggle("decorations"),
+                "A wash of the painting behind the overlay, and the banner’s slow drift."),
             row("Opacity", self._slider("opacity", 25, 100, 100, "{}%")),
             row("Size", self._slider("scale", 50, 300, 100, "{}%")),
             row("Swatch size", self._slider("swatch_size", 16, 96, 1, "{} px")),
             row("Corner roundness", self._slider("corner_radius", 0, 24, 1, "{} px")),
-            row("Font", self._font_picker("font_family")),
+            row("Font", self._font_picker("font_family"),
+                "Default uses a serif for colour names, like a museum label."),
         ))
         lay.addStretch(1)
         return w
@@ -184,10 +231,10 @@ class SettingsWindow(QWidget):
         ol.addWidget(self._spin("offset_y", -300, 300, " px"))
         lay.addWidget(card(
             row("Follow the cursor", self._toggle("attach_to_cursor"),
-                "Off: drag the card anywhere and it stays put."),
+                "Off: drag the card anywhere on your canvas and it stays put."),
             row("Distance from cursor", offsets),
             row("Descriptive mode", self._toggle("descriptive_mode"),
-                "Detailed info. Also: double-click the card or Ctrl+Shift+D."),
+                "The full story of a colour. Also: double-click the card or Ctrl+Shift+D."),
         ))
         lay.addWidget(section("Compact mode shows"))
         lay.addWidget(card(
@@ -211,17 +258,22 @@ class SettingsWindow(QWidget):
     def _page_vision(self) -> QWidget:
         w, lay = self._page()
         lay.addWidget(card(
-            row("Show simulations", self._toggle("show_simulations"),
-                "How the colour under the cursor looks with each vision type. "
-                "Shown in descriptive mode."),
+            row("Show simulations on the overlay", self._toggle("show_simulations"),
+                "In descriptive mode, see how the colour under your cursor reads for each "
+                "vision type you switch on below."),
         ))
-        lay.addWidget(section("Vision types"))
-        rows = [self._cvd_row(None, "Typical vision", "Reference — the last chip is the "
-                                                       "colour under your cursor", None)]
+        note = QLabel("Below, Vincent’s 1887 self-portrait — red beard against a green "
+                      "ground — as each eye might see it. Some have wondered whether he "
+                      "saw colour differently himself: an intriguing, unproven idea.")
+        note.setObjectName("caption")
+        note.setWordWrap(True)
+        lay.addWidget(note)
+        rows = [self._cvd_row(None, "Typical colour vision",
+                              "The last chip is the colour under your cursor.", None)]
         for kind, label in CVD_LABELS.items():
             rows.append(self._cvd_row(kind, label, _CVD_DESC[kind], f"sim_{kind}"))
-        self._sim_card = card(*rows[1:])
         lay.addWidget(card(rows[0]))
+        self._sim_card = card(*rows[1:])
         lay.addWidget(self._sim_card)
         self._refreshers.append(
             lambda: self._sim_card.setEnabled(self.settings.show_simulations))
@@ -229,15 +281,44 @@ class SettingsWindow(QWidget):
         return w
 
     def _cvd_row(self, kind, title, desc, attr) -> QWidget:
-        box = QWidget()
-        v = QVBoxLayout(box)
-        v.setContentsMargins(0, 0, 0, 8)
-        v.setSpacing(0)
-        v.addWidget(row(title, self._toggle(attr) if attr else None, desc))
+        thumb = PaintingThumb(kind)
+        self._thumbs.append(thumb)
         strip = CvdStrip(kind)
         self._strips.append(strip)
-        v.addWidget(strip)
-        return box
+        return row(title, self._toggle(attr) if attr else None, desc, leading=thumb, below=strip)
+
+    def _page_palette(self) -> QWidget:
+        w, lay = self._page()
+        self._palette_grid = PaletteGrid()
+        self._palette_grid.copyRequested.connect(self.copyRequested.emit)
+        self._palette_grid.removeRequested.connect(self._remove_color)
+        copy_all = QPushButton("Copy all")
+        copy_all.clicked.connect(lambda: QApplication.clipboard().setText(
+            "\n".join(self.settings.palette)))
+        export = QPushButton("Export for GIMP / Krita…")
+        export.clicked.connect(self._export_palette)
+        clear = QPushButton("Clear")
+        clear.clicked.connect(self._clear_palette)
+        actions = QWidget()
+        al = QHBoxLayout(actions)
+        al.setContentsMargins(0, 0, 0, 0)
+        al.addWidget(copy_all)
+        al.addWidget(export)
+        al.addStretch(1)
+        al.addWidget(clear)
+        holder = QWidget()
+        hl = QVBoxLayout(holder)
+        hl.setContentsMargins(0, 4, 0, 4)
+        hl.addWidget(self._palette_grid)
+        lay.addWidget(card(holder))
+        lay.addWidget(actions)
+        hint = QLabel("Click a dab to copy it · right-click to remove · newest first, "
+                      "up to 40 colours")
+        hint.setObjectName("caption")
+        lay.addWidget(hint)
+        self._refreshers.append(lambda: self._palette_grid.set_colors(self.settings.palette))
+        lay.addStretch(1)
+        return w
 
     def _page_shortcuts(self) -> QWidget:
         w, lay = self._page()
@@ -245,7 +326,7 @@ class SettingsWindow(QWidget):
                                "Click a shortcut, then press the new keys. "
                                "Backspace clears, Esc cancels.")))
         self._hotkey_card = card(
-            row("Copy HEX", self._hotkey("hotkey_copy_hex")),
+            row("Copy HEX (and add to palette)", self._hotkey("hotkey_copy_hex")),
             row("Freeze / unfreeze colour", self._hotkey("hotkey_freeze")),
             row("Follow cursor on / off", self._hotkey("hotkey_toggle_attach")),
             row("Descriptive mode on / off", self._hotkey("hotkey_toggle_descriptive")),
@@ -278,7 +359,7 @@ class SettingsWindow(QWidget):
         lay.addWidget(card(
             row("Sample area", self._segmented("sample_size", [("1×1", 1), ("3×3", 3),
                                                                ("5×5", 5)]),
-                "Averaging smooths anti-aliased text and gradients."),
+                "Averaging smooths over brushstrokes, anti-aliasing and gradients."),
             row("Refresh every", self._slider("update_interval_ms", 10, 200, 1, "{} ms"),
                 "Lower feels snappier, higher saves battery."),
         ))
@@ -290,17 +371,88 @@ class SettingsWindow(QWidget):
             QUrl.fromLocalFile(os.path.dirname(settings_path()))))
         lay.addWidget(card(
             row("Settings file", folder, os.path.normpath(settings_path())),
-            row("Restore defaults", reset, "Themes, fields and hotkeys go back to default."),
+            row("Restore defaults", reset, "Themes, fields and hotkeys. Your palette is kept."),
         ))
         lay.addWidget(section("About"))
-        gh = QPushButton("GitHub ↗")
+        lay.addWidget(card(self._about()))
+        lay.addStretch(1)
+        return w
+
+    def _about(self) -> QWidget:
+        w = QWidget()
+        lay = QHBoxLayout(w)
+        lay.setContentsMargins(0, 10, 0, 10)
+        lay.setSpacing(16)
+        portrait = QLabel()
+        dpr = max(1.0, self.devicePixelRatioF())
+        img = cover_image("portrait", int(96 * dpr), int(122 * dpr))
+        from PySide6.QtGui import QPixmap
+        pm = QPixmap(int(96 * dpr), int(122 * dpr))
+        pm.fill(Qt.GlobalColor.transparent)
+        p = QPainter(pm)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        path = QPainterPath()
+        path.addRoundedRect(QRectF(0, 0, pm.width(), pm.height()), 10 * dpr, 10 * dpr)
+        p.setClipPath(path)
+        p.drawImage(0, 0, img)
+        p.end()
+        pm.setDevicePixelRatio(dpr)
+        portrait.setPixmap(pm)
+        portrait.setToolTip("Vincent van Gogh, Self-Portrait, 1887 — Art Institute of Chicago")
+        lay.addWidget(portrait, 0, Qt.AlignmentFlag.AlignTop)
+
+        text = QVBoxLayout()
+        text.setSpacing(4)
+        title = QLabel(f"Colorblind Helper {__version__}")
+        title.setObjectName("appName")
+        text.addWidget(title)
+        blurb = QLabel("For colour-blind artists, with love from Vincent’s palette. "
+                       "Every colour deserves a name.")
+        blurb.setObjectName("caption")
+        blurb.setWordWrap(True)
+        text.addWidget(blurb)
+        links = "<br>".join(
+            f'<a href="{pt.source}">{pt.title}</a> ({pt.year}), {pt.collection}'
+            for pt in PAINTINGS.values())
+        credits = QLabel(f"<span style='font-size:8pt'>Paintings by Vincent van Gogh, public "
+                         f"domain; scans via Wikimedia Commons.<br>{links}</span>")
+        credits.setObjectName("desc")
+        credits.setTextFormat(Qt.TextFormat.RichText)
+        credits.setOpenExternalLinks(True)
+        credits.setWordWrap(True)
+        text.addWidget(credits)
+        gh = QPushButton("Source on GitHub ↗")
         gh.setObjectName("link")
         gh.setCursor(Qt.CursorShape.PointingHandCursor)
         gh.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(REPO_URL)))
-        lay.addWidget(card(row(f"Colorblind Helper {__version__}", gh,
-                               "Made with ♥ so every colour has a name.")))
-        lay.addStretch(1)
+        text.addWidget(gh, 0, Qt.AlignmentFlag.AlignLeft)
+        lay.addLayout(text, 1)
         return w
+
+    # ------------------------------------------------------------------ palette actions
+    def _remove_color(self, hx: str) -> None:
+        if hx in self.settings.palette:
+            self.settings.palette.remove(hx)
+            self.paletteChanged.emit()
+
+    def _clear_palette(self) -> None:
+        self.settings.palette.clear()
+        self.paletteChanged.emit()
+
+    def _export_palette(self) -> None:
+        if not self.settings.palette:
+            return
+        path, _ = QFileDialog.getSaveFileName(self, "Export palette", "Colorblind Helper.gpl",
+                                              "GIMP palette (*.gpl)")
+        if not path:
+            return
+        from .colors import color_info
+        lines = ["GIMP Palette", "Name: Colorblind Helper", "Columns: 8", "#"]
+        for hx in self.settings.palette:
+            rgb = tuple(int(hx[i:i + 2], 16) for i in (1, 3, 5))
+            lines.append(f"{rgb[0]:3d} {rgb[1]:3d} {rgb[2]:3d}\t{color_info(rgb).name} {hx}")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines) + "\n")
 
     # ------------------------------------------------------------------ bound controls
     def _set(self, attr: str, value) -> None:
@@ -402,7 +554,7 @@ class SettingsWindow(QWidget):
         group.setExclusive(True)
         cards: list[ThemeCard] = []
         for i, key in enumerate(keys):
-            c = ThemeCard(key, "Match app" if key == MATCH else None)
+            c = ThemeCard(key)
             c.clicked.connect(lambda _=False, k=key: self._set(attr, k))
             group.addButton(c)
             grid.addWidget(c, i // 4, i % 4)
@@ -446,6 +598,8 @@ class SettingsWindow(QWidget):
     def refresh(self) -> None:
         for fn in self._refreshers:
             fn()
+        for th in self._thumbs:
+            th.set_painting("portrait")
         self.banner.preview.relayout()
         self.banner.preview.update()
 
@@ -474,4 +628,4 @@ class SettingsWindow(QWidget):
         e.ignore()
 
     def sizeHint(self) -> QSize:
-        return QSize(780, 580)
+        return QSize(880, 650)

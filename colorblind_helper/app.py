@@ -261,9 +261,17 @@ class ColorblindHelperApp(QObject):
         self.settings.overlay_theme = key
         self._on_settings_changed()
 
-    def _copy(self, text: str) -> None:
+    def _copy(self, text: str, add_to_palette: bool = True) -> None:
         self.qapp.clipboard().setText(text)
         self.overlay.flash_copied()
+        if add_to_palette and self.overlay.info is not None:
+            self.settings.add_to_palette(self.overlay.info.hex(True))
+            self._on_palette_changed()
+
+    def _on_palette_changed(self) -> None:
+        if self.window is not None:
+            self.window.refresh()
+        save_settings(self.settings)
 
     def copy_hex(self) -> None:
         if self.overlay.info:
@@ -284,6 +292,10 @@ class ColorblindHelperApp(QObject):
             self.window = SettingsWindow(self.settings, pynput_available())
             self.window.changed.connect(self._on_settings_changed)
             self.window.quitRequested.connect(self.quit)
+            self.window.copyRequested.connect(
+                lambda hx: self._copy(hx if self.settings.uppercase_hex else hx.lower(),
+                                      add_to_palette=False))
+            self.window.paletteChanged.connect(self._on_palette_changed)
             self.window.set_live_color(self.overlay.info)
         self.window.refresh()
         self.window.show()

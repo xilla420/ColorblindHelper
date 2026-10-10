@@ -7,16 +7,24 @@ import time
 
 from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QColor, QCursor, QFont, QFontDatabase, QFontMetrics, QGuiApplication,
-                           QPainter, QPainterPath, QPen)
+                           QPainter, QPainterPath, QPen, QPixmap)
 from PySide6.QtWidgets import QWidget
 
 from .colors import CVD_LABELS, ColorInfo, color_info
 from .pixel import PixelReader
 from .settings import Settings
-from .themes import Theme, overlay_theme, paint_decor
+from .paintings import cover_image
+from .themes import Theme, canvas_texture, overlay_theme, serif_family
 
 RGB = tuple[int, int, int]
 _T0 = time.monotonic()
+_CANVAS: dict[bool, QPixmap] = {}
+
+
+def _canvas_pixmap(dark: bool) -> QPixmap:
+    if dark not in _CANVAS:
+        _CANVAS[dark] = QPixmap.fromImage(canvas_texture(dark))
+    return _CANVAS[dark]
 
 
 def anim_time() -> float:
@@ -49,7 +57,8 @@ class OverlayRenderer:
             f.setWeight(weight)
             return f
 
-        return (make(family, 1.2, QFont.Weight.Bold), make(family, 1.0),
+        title_family = s.font_family or serif_family()  # colour names set like a museum label
+        return (make(title_family, 1.25, QFont.Weight.Bold), make(family, 1.0),
                 make(mono_family, 0.95), make(mono_family, 1.25, QFont.Weight.Bold),
                 make(family, 0.8, QFont.Weight.DemiBold))
 
@@ -189,7 +198,13 @@ class OverlayRenderer:
         if s.decorations:
             p.save()
             p.setClipPath(panel)
-            paint_decor(p, rect, t, now, intensity=0.4)  # subtle: text must stay readable
+            w, h = self.size.width(), self.size.height()
+            if t.painting:
+                # A faint wash of the painting behind the text (kept low for legibility).
+                p.setOpacity(0.16 if t.dark else 0.2)
+                p.drawImage(rect, cover_image(t.painting, w, h, 1.6))
+            else:
+                p.drawTiledPixmap(rect.toRect(), _canvas_pixmap(t.dark))
             p.restore()
         p.setPen(QPen(t.c("border"), 1))
         p.setBrush(Qt.BrushStyle.NoBrush)
@@ -323,9 +338,7 @@ class OverlayWindow(QWidget):
         self._last_pos = cur
         if s.attach_to_cursor and moved:
             self._place_near(cur)
-        # Decorations animate at ~12 fps; the copy badge fades smoothly.
-        animating = (now - self._copied_at < 1.3) or (
-            s.decorations and now - self._last_paint >= 0.08)
+        animating = now - self._copied_at < 1.3  # the copy badge fades smoothly
         skip_sample = (self.frozen or (not s.attach_to_cursor and (
             self._drag_offset is not None or self.frameGeometry().contains(cur))))
         # Reading the screen is the expensive part (~4 ms through the compositor):

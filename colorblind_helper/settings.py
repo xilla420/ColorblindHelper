@@ -66,6 +66,17 @@ class Settings:
     run_at_startup: bool = False
     first_run: bool = True
 
+    # The artist's palette: colours you copied, newest first (HEX strings).
+    palette: list = field(default_factory=list)
+    PALETTE_MAX = 40
+
+    def add_to_palette(self, hex_code: str) -> None:
+        hex_code = hex_code.upper()
+        if hex_code in self.palette:
+            self.palette.remove(hex_code)
+        self.palette.insert(0, hex_code)
+        del self.palette[self.PALETTE_MAX:]
+
     # ---------------------------------------------------------------- helpers
     def hotkey_map(self) -> dict[str, str]:
         return {
@@ -77,8 +88,9 @@ class Settings:
         }
 
     def reset(self) -> None:
+        """Back to defaults, keeping position, first-run flag and the user's palette."""
         for f in fields(Settings):
-            if f.name in ("free_x", "free_y", "first_run"):
+            if f.name in ("free_x", "free_y", "first_run", "palette"):
                 continue
             setattr(self, f.name, f.default)
 
@@ -86,13 +98,18 @@ class Settings:
         return dataclasses.asdict(self)
 
     def update_from(self, data: dict) -> None:
-        defaults = {f.name: f.default for f in fields(Settings)}
+        from .themes import migrate_key
+        defaults = {f.name: (f.default if f.default is not dataclasses.MISSING
+                             else f.default_factory()) for f in fields(Settings)}
         if "theme" in data and "overlay_theme" not in data:  # pre-1.0 settings file
-            data["overlay_theme"] = {"light": "daylight"}.get(data["theme"], "midnight")
+            data["overlay_theme"] = {"light": "linen"}.get(data["theme"], "charcoal")
         for k, v in data.items():
             if k in defaults and type(v) is type(defaults[k]) or (
                     k in defaults and isinstance(defaults[k], float) and isinstance(v, int)):
                 setattr(self, k, v)
+        self.ui_theme = migrate_key(self.ui_theme)
+        self.overlay_theme = migrate_key(self.overlay_theme)
+        self.palette = [c for c in self.palette if isinstance(c, str)][:self.PALETTE_MAX]
 
 
 def settings_path() -> str:

@@ -14,13 +14,24 @@ def paint_icon(p: QPainter, size: float) -> None:
     m = s * 0.04
     tile = QRectF(m, m, s - 2 * m, s - 2 * m)
 
-    # Night-sky squircle.
+    # Squircle cut from The Starry Night's great swirl.
+    path = QPainterPath()
+    path.addRoundedRect(tile, s * 0.24, s * 0.24)
     bg = QLinearGradient(tile.topLeft(), tile.bottomRight())
     bg.setColorAt(0, QColor("#24477f"))
     bg.setColorAt(1, QColor("#0c1834"))
-    path = QPainterPath()
-    path.addRoundedRect(tile, s * 0.24, s * 0.24)
     p.fillPath(path, bg)
+    from .paintings import painting_image
+    img = painting_image("starry")
+    if img.width() > 64:
+        side = img.height() * 0.62
+        src = QRectF(img.width() * 0.47 - side / 2, img.height() * 0.06, side, side)
+        p.save()
+        p.setClipPath(path)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        p.drawImage(tile, img, src)
+        p.fillPath(path, QColor(8, 16, 40, 70))  # deepen so the iris pops
+        p.restore()
 
     # Colour-wheel ring (a soft iris).
     c = tile.center()

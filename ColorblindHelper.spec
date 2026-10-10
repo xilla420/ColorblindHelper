@@ -22,6 +22,7 @@ else:
 a = Analysis(
     [str(ROOT / "main.py")],
     pathex=[str(ROOT)],
+    datas=[(str(ROOT / "assets" / "paintings"), "assets/paintings")],
     hiddenimports=hidden,
     excludes=["tkinter", "unittest", "pydoc", "PySide6.QtQml", "PySide6.QtQuick",
               "PySide6.QtWebEngineCore", "PySide6.QtMultimedia", "PySide6.QtPdf",
