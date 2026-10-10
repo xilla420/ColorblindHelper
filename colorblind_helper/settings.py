@@ -22,9 +22,11 @@ class Settings:
 
     # Appearance
     descriptive_mode: bool = False
-    opacity: float = 0.94
+    ui_theme: str = "starry"
+    overlay_theme: str = "match"   # a theme key, or "match" to follow ui_theme
+    decorations: bool = True       # animated theme decorations (overlay + settings)
+    opacity: float = 0.95
     scale: float = 1.0
-    theme: str = "dark"       # "dark" | "light"
     swatch_size: int = 36
     font_family: str = ""     # "" = system default
     corner_radius: int = 10
@@ -61,6 +63,7 @@ class Settings:
     hotkey_toggle_descriptive: str = "<ctrl>+<shift>+d"
     hotkey_toggle_visible: str = "<ctrl>+<shift>+h"
 
+    run_at_startup: bool = False
     first_run: bool = True
 
     # ---------------------------------------------------------------- helpers
@@ -83,9 +86,12 @@ class Settings:
         return dataclasses.asdict(self)
 
     def update_from(self, data: dict) -> None:
-        known = {f.name: f.type for f in fields(Settings)}
+        defaults = {f.name: f.default for f in fields(Settings)}
+        if "theme" in data and "overlay_theme" not in data:  # pre-1.0 settings file
+            data["overlay_theme"] = {"light": "daylight"}.get(data["theme"], "midnight")
         for k, v in data.items():
-            if k in known:
+            if k in defaults and type(v) is type(defaults[k]) or (
+                    k in defaults and isinstance(defaults[k], float) and isinstance(v, int)):
                 setattr(self, k, v)
 
 

@@ -259,6 +259,8 @@ def describe(rgb: RGB) -> str:
         fam = "brown"
         if sat != "grayish":
             sat = ""
+    elif fam == "pink" and l < 0.6 and s > 0.45:  # crimson, raspberry: reads as red
+        fam = "red" if h >= 342 else "magenta"
     elif fam in ("red", "pink", "magenta") and l > 0.8 or fam == "red" and l > 0.7:
         fam = "pink"
         if light == "very light":

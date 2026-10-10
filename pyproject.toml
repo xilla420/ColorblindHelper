@@ -6,8 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "colorblind-helper"
 version = "1.0.0"
 description = "Always-on-top overlay that names and describes the colour under your cursor."
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = ["PySide6>=6.5"]
+
+[project.urls]
+Homepage = "https://github.com/xilla420/ColorblindHelper"
 
 [project.optional-dependencies]
 hotkeys = ["pynput>=1.7"]

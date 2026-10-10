@@ -1,19 +1,24 @@
-"""Application wiring: tray icon, menus, hotkeys, overlay and settings."""
+"""Application wiring: tray icon, menus, hotkeys, overlay, settings window,
+run-at-startup and single-instance handling."""
 from __future__ import annotations
 
+import getpass
 import sys
 
-from PySide6.QtCore import QObject, QPoint, QRectF, Qt
-from PySide6.QtGui import QAction, QColor, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QObject, QPoint, Qt
+from PySide6.QtGui import QAction
+from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from . import __version__
+from . import __version__, autostart
 from .colors import CVD_LABELS
 from .hotkeys import HotkeyManager, pynput_available
+from .icon import app_icon
 from .overlay import OverlayWindow
 from .pixel import PixelReader
 from .settings import APP_NAME, load_settings, save_settings
-from .settings_dialog import SettingsDialog
+from .settings_window import SettingsWindow
+from .themes import THEMES, get_theme, menu_stylesheet, palette_for
 
 
 class StayOpenMenu(QMenu):
@@ -40,39 +45,40 @@ class StayOpenMenu(QMenu):
         super().keyPressEvent(e)
 
 
-def make_icon(size: int = 64) -> QIcon:
-    pm = QPixmap(size, size)
-    pm.fill(Qt.GlobalColor.transparent)
-    p = QPainter(pm)
-    p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-    p.setPen(Qt.PenStyle.NoPen)
-    rect = QRectF(3, 3, size - 6, size - 6)
-    for i, col in enumerate(("#E53935", "#FDD835", "#43A047", "#1E88E5")):
-        p.setBrush(QColor(col))
-        p.drawPie(rect, i * 90 * 16, 90 * 16)
-    p.setBrush(QColor(255, 255, 255))
-    p.drawEllipse(rect.center(), size * 0.2, size * 0.2)
-    p.setBrush(QColor(30, 30, 30))
-    p.drawEllipse(rect.center(), size * 0.09, size * 0.09)
-    p.end()
-    return QIcon(pm)
+def _instance_name() -> str:
+    try:
+        user = getpass.getuser()
+    except Exception:
+        user = "user"
+    return f"{APP_NAME}-{user}"
 
 
 class ColorblindHelperApp(QObject):
     def __init__(self, argv: list[str]) -> None:
-        self.qapp = QApplication(argv)
+        self.qapp = QApplication.instance() or QApplication(argv)
         super().__init__()
         self.qapp.setApplicationName(APP_NAME)
         self.qapp.setApplicationDisplayName("Colorblind Helper")
         self.qapp.setOrganizationName(APP_NAME)
         self.qapp.setApplicationVersion(__version__)
         self.qapp.setQuitOnLastWindowClosed(False)
-        self.qapp.setWindowIcon(make_icon())
+        self.qapp.setStyle("Fusion")
+        self.qapp.setWindowIcon(app_icon())
+        self.autostarted = autostart.STARTUP_FLAG in argv
+
+        # Single instance: if one is already running, ask it to show its settings.
+        self.already_running = self._signal_existing_instance()
+        if self.already_running:
+            return
+        self._server = QLocalServer(self)
+        QLocalServer.removeServer(_instance_name())
+        self._server.listen(_instance_name())
+        self._server.newConnection.connect(self._on_second_instance)
 
         self.settings = load_settings()
         self.reader = PixelReader()
         self.overlay = OverlayWindow(self.settings, self.reader)
-        self.dialog: SettingsDialog | None = None
+        self.window: SettingsWindow | None = None
 
         ov = self.overlay
         ov.contextMenuRequested.connect(self._show_menu_at)
@@ -83,9 +89,10 @@ class ColorblindHelperApp(QObject):
         ov.hideRequested.connect(lambda: self.set_visible(False))
         ov.quitRequested.connect(self.quit)
         ov.settingsChanged.connect(self._on_settings_changed)
+        ov.colorChanged.connect(self._on_color)
 
         self._build_menu()
-        self.tray = QSystemTrayIcon(make_icon(), self)
+        self.tray = QSystemTrayIcon(app_icon(), self)
         self.tray.setToolTip("Colorblind Helper")
         self.tray.setContextMenu(self.menu)
         self.tray.activated.connect(self._on_tray_activated)
@@ -96,21 +103,43 @@ class ColorblindHelperApp(QObject):
         self.hotkeys.error.connect(self._notify)
         self.hotkeys.apply(self.settings.hotkeys_enabled, self.settings.hotkey_map())
 
+        self._apply_ui_theme()
+        self._sync_autostart()
         self.overlay.show()
         self._sync_actions()
 
-        if self.settings.first_run:
+        if self.settings.first_run and not self.autostarted:
             self.settings.first_run = False
             save_settings(self.settings)
-            self._notify("Colorblind Helper is running. Right-click the tray icon (or the "
-                         "overlay when detached) for options.", "Colorblind Helper")
+            self.open_settings()
         if sys.platform == "darwin":
             self._mac_permission_hint()
+
+    # ------------------------------------------------------------------ single instance
+    @staticmethod
+    def _signal_existing_instance() -> bool:
+        sock = QLocalSocket()
+        sock.connectToServer(_instance_name())
+        if sock.waitForConnected(300):
+            sock.write(b"show")
+            sock.waitForBytesWritten(300)
+            sock.disconnectFromServer()
+            return True
+        return False
+
+    def _on_second_instance(self) -> None:
+        conn = self._server.nextPendingConnection()
+        if conn is not None:
+            conn.disconnectFromServer()
+        self.set_visible(True)
+        self.open_settings()
 
     # ------------------------------------------------------------------ menu / tray
     def _build_menu(self) -> None:
         self.menu = QMenu()
-        self.act_attach = QAction("Attach to cursor", self.menu, checkable=True)
+        title = QAction("Colorblind Helper", self.menu)
+        title.setEnabled(False)
+        self.act_attach = QAction("Follow cursor", self.menu, checkable=True)
         self.act_attach.triggered.connect(self.toggle_attach)
         self.act_desc = QAction("Descriptive mode", self.menu, checkable=True)
         self.act_desc.triggered.connect(self.toggle_descriptive)
@@ -126,14 +155,6 @@ class ColorblindHelperApp(QObject):
         self.act_copy_desc = QAction("Copy description", self.menu)
         self.act_copy_desc.triggered.connect(self.copy_description)
 
-        theme = QMenu("Theme", self.menu)
-        self.act_theme_dark = QAction("Dark", theme, checkable=True)
-        self.act_theme_light = QAction("Light", theme, checkable=True)
-        self.act_theme_dark.triggered.connect(lambda: self.set_theme("dark"))
-        self.act_theme_light.triggered.connect(lambda: self.set_theme("light"))
-        theme.addAction(self.act_theme_dark)
-        theme.addAction(self.act_theme_light)
-
         sims = StayOpenMenu("Colour-blind simulations", self.menu)
         self.sim_actions: dict[str, QAction] = {}
         for kind, label in CVD_LABELS.items():
@@ -142,12 +163,23 @@ class ColorblindHelperApp(QObject):
             sims.addAction(act)
             self.sim_actions[kind] = act
 
+        themes = QMenu("Overlay theme", self.menu)
+        self.theme_actions: dict[str, QAction] = {}
+        for key in ("match", *THEMES):
+            act = QAction("Match app" if key == "match" else THEMES[key].name, themes,
+                          checkable=True)
+            act.triggered.connect(lambda _=False, k=key: self.set_overlay_theme(k))
+            themes.addAction(act)
+            self.theme_actions[key] = act
+
         act_settings = QAction("Settings…", self.menu)
         act_settings.triggered.connect(self.open_settings)
         act_quit = QAction("Quit", self.menu)
         act_quit.triggered.connect(self.quit)
 
         m = self.menu
+        m.addAction(title)
+        m.addSeparator()
         m.addAction(self.act_attach)
         m.addAction(self.act_desc)
         m.addAction(self.act_freeze)
@@ -158,27 +190,26 @@ class ColorblindHelperApp(QObject):
         m.addAction(self.act_copy_desc)
         m.addSeparator()
         m.addMenu(sims)
-        m.addMenu(theme)
+        m.addMenu(themes)
         m.addAction(act_settings)
         m.addSeparator()
         m.addAction(act_quit)
 
     def _sync_actions(self) -> None:
         s = self.settings
-        for act, val in ((self.act_attach, s.attach_to_cursor),
-                         (self.act_desc, s.descriptive_mode),
-                         (self.act_freeze, self.overlay.frozen),
-                         (self.act_visible, self.overlay.isVisible()),
-                         (self.act_theme_dark, s.theme == "dark"),
-                         (self.act_theme_light, s.theme == "light"),
-                         *((a, getattr(s, f"sim_{k}")) for k, a in self.sim_actions.items())):
+        pairs = [(self.act_attach, s.attach_to_cursor),
+                 (self.act_desc, s.descriptive_mode),
+                 (self.act_freeze, self.overlay.frozen),
+                 (self.act_visible, self.overlay.isVisible())]
+        pairs += [(a, getattr(s, f"sim_{k}")) for k, a in self.sim_actions.items()]
+        pairs += [(a, s.overlay_theme == k) for k, a in self.theme_actions.items()]
+        for act, val in pairs:
             act.blockSignals(True)
             act.setChecked(bool(val))
             act.blockSignals(False)
         has = self.overlay.info is not None
-        self.act_copy_hex.setEnabled(has)
-        self.act_copy_rgb.setEnabled(has)
-        self.act_copy_desc.setEnabled(has)
+        for act in (self.act_copy_hex, self.act_copy_rgb, self.act_copy_desc):
+            act.setEnabled(has)
 
     def _show_menu_at(self, pos: QPoint) -> None:
         self._sync_actions()
@@ -189,10 +220,12 @@ class ColorblindHelperApp(QObject):
             self.set_visible(not self.overlay.isVisible())
         elif reason == QSystemTrayIcon.ActivationReason.DoubleClick:
             self.open_settings()
+        elif reason == QSystemTrayIcon.ActivationReason.Context:
+            self._sync_actions()
 
     def _notify(self, text: str, title: str = "Colorblind Helper") -> None:
         if self.tray.isVisible() and QSystemTrayIcon.supportsMessages():
-            self.tray.showMessage(title, text, make_icon(), 5000)
+            self.tray.showMessage(title, text, app_icon(), 5000)
         else:
             print(f"{title}: {text}", file=sys.stderr)
 
@@ -224,52 +257,77 @@ class ColorblindHelperApp(QObject):
             self.settings.show_simulations = True
         self._on_settings_changed()
 
-    def set_theme(self, theme: str) -> None:
-        self.settings.theme = theme
+    def set_overlay_theme(self, key: str) -> None:
+        self.settings.overlay_theme = key
         self._on_settings_changed()
 
+    def _copy(self, text: str) -> None:
+        self.qapp.clipboard().setText(text)
+        self.overlay.flash_copied()
+
     def copy_hex(self) -> None:
-        info = self.overlay.info
-        if info:
-            text = info.hex(self.settings.uppercase_hex)
-            self.qapp.clipboard().setText(text)
-            self._notify(f"Copied {text}")
+        if self.overlay.info:
+            self._copy(self.overlay.info.hex(self.settings.uppercase_hex))
 
     def copy_rgb(self) -> None:
-        info = self.overlay.info
-        if info:
-            text = "rgb({}, {}, {})".format(*info.rgb)
-            self.qapp.clipboard().setText(text)
-            self._notify(f"Copied {text}")
+        if self.overlay.info:
+            self._copy("rgb({}, {}, {})".format(*self.overlay.info.rgb))
 
     def copy_description(self) -> None:
         info = self.overlay.info
         if info:
-            text = f"{info.description} ({info.hex(self.settings.uppercase_hex)}, closest: {info.name})"
-            self.qapp.clipboard().setText(text)
-            self._notify(f"Copied: {text}")
+            self._copy(f"{info.description} ({info.hex(self.settings.uppercase_hex)}, "
+                       f"closest: {info.name})")
 
     def open_settings(self) -> None:
-        if self.dialog is None:
-            self.dialog = SettingsDialog(self.settings, pynput_available())
-            self.dialog.changed.connect(self._on_settings_changed)
-        self.dialog.refresh()
-        self.dialog.show()
-        self.dialog.raise_()
-        self.dialog.activateWindow()
+        if self.window is None:
+            self.window = SettingsWindow(self.settings, pynput_available())
+            self.window.changed.connect(self._on_settings_changed)
+            self.window.quitRequested.connect(self.quit)
+            self.window.set_live_color(self.overlay.info)
+        self.window.refresh()
+        self.window.show()
+        self.window.setWindowState(self.window.windowState() & ~Qt.WindowState.WindowMinimized)
+        self.window.raise_()
+        self.window.activateWindow()
 
     def quit(self) -> None:
         save_settings(self.settings)
         self.hotkeys.stop()
         self.tray.hide()
-        self.qapp.quit()
+        # exit(), not quit(): Qt 6's quit() closes windows first, and the settings
+        # window ignores close (it hides to tray), which would cancel the quit.
+        self.qapp.exit(0)
 
     # ------------------------------------------------------------------ plumbing
+    def _apply_ui_theme(self) -> None:
+        t = get_theme(self.settings.ui_theme)
+        self.qapp.setPalette(palette_for(t))
+        self.qapp.setStyleSheet(menu_stylesheet(t))
+        if self.window is not None:
+            self.window.apply_theme()
+
+    def _sync_autostart(self) -> None:
+        want = self.settings.run_at_startup
+        try:
+            # Re-register when enabled so a moved exe/script keeps working.
+            if want or autostart.is_enabled():
+                autostart.set_enabled(want)
+        except OSError as exc:
+            self.settings.run_at_startup = autostart.is_enabled()
+            self._notify(f"Could not change the startup setting: {exc}")
+
+    def _on_color(self, info) -> None:
+        if self.window is not None and self.window.isVisible():
+            self.window.set_live_color(info)
+
     def _on_settings_changed(self) -> None:
         self.overlay.apply_settings()
         self.hotkeys.apply(self.settings.hotkeys_enabled, self.settings.hotkey_map())
-        if self.dialog is not None and self.dialog.isVisible():
-            self.dialog.refresh()
+        self._apply_ui_theme()
+        self._sync_autostart()
+        if self.window is not None:
+            self.window.refresh()
         self._sync_actions()
         save_settings(self.settings)
 
@@ -283,6 +341,8 @@ class ColorblindHelperApp(QObject):
         }.get(action, lambda: None)()
 
     def run(self) -> int:
+        if self.already_running:
+            return 0
         return self.qapp.exec()
 
 
