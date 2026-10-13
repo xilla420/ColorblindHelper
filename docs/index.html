@@ -66,80 +66,109 @@
 
 <style>
   :root {
-    --bg: #0b1630; --surface: #12224a; --surface2: #1a3062; --border: #2c4880;
+    --bg: #0b1630; --bg2: #0f1d40; --surface: #13244d; --border: #2c4880;
     --text: #f6edcf; --sub: #b3c1df; --accent: #f2c94c; --accent-ink: #13162b;
+    --gold: linear-gradient(135deg, #8a6a1f, #f2d27a 30%, #a8812a 55%, #f5dc8e 80%, #7a5a16);
     --serif: Georgia, "Palatino Linotype", Palatino, "Times New Roman", serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 var(--sans); }
+  body {
+    margin: 0; color: var(--text); font: 16px/1.6 var(--sans);
+    background-color: var(--bg);
+    /* faint woven-canvas texture */
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px);
+  }
   a { color: var(--accent); }
-  img { max-width: 100%; display: block; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
-  h1, h2, h3 { font-family: var(--serif); line-height: 1.15; margin: 0 0 .5em; }
-  h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); }
-  h3 { font-size: 1.2rem; }
-  .muted { color: var(--sub); }
-  .serif-i { font-family: var(--serif); font-style: italic; }
+  img { display: block; max-width: 100%; height: auto; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  h1, h2, h3 { font-family: var(--serif); line-height: 1.15; margin: 0 0 .4em; }
+  h2 { font-size: clamp(1.55rem, 3vw, 2.1rem); }
+  h3 { font-size: 1.05rem; }
+  .eyebrow { font: italic .95rem var(--serif); color: var(--accent); margin: 0 0 .2em; letter-spacing: .02em; }
+  .lead { color: var(--sub); max-width: 680px; margin: 0 0 22px; }
+
+  /* gilded picture frame */
+  .frame { padding: 5px; border-radius: 6px; background: var(--gold);
+           box-shadow: 0 10px 28px rgba(0,0,0,.45); }
+  .frame img { border-radius: 2px; width: 100%; outline: 1px solid rgba(0,0,0,.5); }
 
   header.hero {
-    position: relative; min-height: 88vh; display: flex; align-items: center;
-    background: linear-gradient(90deg, rgba(11,22,48,.95) 0%, rgba(11,22,48,.8) 45%, rgba(11,22,48,.2) 100%),
-                url("img/hero.jpg") center / cover no-repeat;
+    position: relative; min-height: min(70vh, 600px); display: flex; align-items: center;
+    background: linear-gradient(90deg, rgba(11,22,48,.96) 0%, rgba(11,22,48,.78) 46%, rgba(11,22,48,.15) 100%),
+                url("img/hero.jpg") center 30% / cover no-repeat;
+    border-bottom: 3px solid transparent; border-image: var(--gold) 1;
   }
-  .hero .wrap { padding-top: 60px; padding-bottom: 60px; }
-  .hero img.logo { width: 92px; height: 92px; margin-bottom: 22px; }
-  .hero h1 { font-size: clamp(2.6rem, 7vw, 4.6rem); }
-  .hero .tag { font-family: var(--serif); font-style: italic; color: var(--accent);
-               font-size: clamp(1.25rem, 2.6vw, 1.7rem); margin: 0 0 .6em; }
-  .hero p.lede { max-width: 560px; color: #dfe5f4; font-size: 1.1rem; }
-  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px;
+  .hero .wrap { padding-top: 44px; padding-bottom: 44px; width: 100%; }
+  .brand { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .brand img { width: 68px; height: 68px; }
+  .hero h1 { font-size: clamp(2.3rem, 6vw, 3.9rem); margin: 0; }
+  .hero .tag { font: italic clamp(1.15rem, 2.4vw, 1.55rem) var(--serif); color: var(--accent); margin: .2em 0 .5em; }
+  .hero p.lede { max-width: 540px; color: #dfe5f4; margin: 0; }
+  .cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 19px; border-radius: 10px;
          font-weight: 600; text-decoration: none; border: 1px solid var(--border);
-         background: rgba(18,34,74,.85); color: var(--text); }
+         background: rgba(19,36,77,.85); color: var(--text); transition: transform .15s; }
   .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-  .btn:hover { transform: translateY(-1px); }
-  .caption { position: absolute; right: 16px; bottom: 14px; font: italic 13px var(--serif);
-             background: rgba(0,0,0,.45); padding: 4px 12px; border-radius: 99px; color: #fff8e6; }
+  .btn:hover { transform: translateY(-2px); }
+  .fine { color: var(--sub); font-size: .85rem; margin-top: 12px; }
+  .caption { position: absolute; right: 14px; bottom: 12px; font: italic 12.5px var(--serif);
+             background: rgba(0,0,0,.5); padding: 3px 11px; border-radius: 99px; color: #fff8e6; }
 
-  section { padding: 84px 0; }
-  section.alt { background: #0e1b3b; }
-  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
-  .card h3 { color: var(--accent); }
-  .card p { margin: 0; color: var(--sub); }
+  section { padding: 54px 0; }
+  section.alt { background: rgba(255,255,255,.025); border-block: 1px solid rgba(255,255,255,.05); }
 
-  .eyes { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-top: 26px; }
-  .eyes figure { margin: 0; background: var(--surface); border: 1px solid var(--border);
-                 border-radius: 14px; overflow: hidden; }
-  .eyes figcaption { padding: 10px 12px; font-size: .92rem; }
-  .eyes figcaption b { display: block; font-family: var(--serif); }
+  .features { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); }
+  .feature { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .feature h3 { color: var(--accent); margin-bottom: .25em; }
+  .feature p { margin: 0; color: var(--sub); font-size: .93rem; }
 
-  .shots { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-  .shots img { border-radius: 14px; border: 1px solid var(--border); }
+  .eyes { display: grid; gap: 14px; grid-template-columns: repeat(5, 1fr); }
+  .eyes figure { margin: 0; }
+  .eyes .frame img { aspect-ratio: 7 / 5; object-fit: cover; }
+  .eyes figcaption { text-align: center; margin-top: 9px; font-size: .85rem; color: var(--sub); line-height: 1.3; }
+  .eyes figcaption b { display: block; color: var(--text); font: 600 .98rem var(--serif); }
 
-  .steps { counter-reset: s; list-style: none; padding: 0; display: grid; gap: 14px; }
+  .gallery { display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); }
+  .gallery .frame img { aspect-ratio: 14 / 9; object-fit: cover; }
+  .shots { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); margin-top: 18px; }
+  .shots .frame img { aspect-ratio: 880 / 650; object-fit: cover; object-position: top; }
+  .label { text-align: center; font: italic .85rem var(--serif); color: var(--sub); margin-top: 8px; }
+
+  .two { display: grid; gap: 34px; grid-template-columns: 1fr 1.25fr; align-items: start; }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
   .steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--border);
-              border-radius: 14px; padding: 16px 18px 16px 62px; position: relative; }
-  .steps li::before { content: counter(s); position: absolute; left: 18px; top: 14px;
-                      width: 30px; height: 30px; border-radius: 50%; background: var(--accent);
-                      color: var(--accent-ink); font-weight: 700; display: grid; place-items: center; }
+              border-radius: 12px; padding: 12px 14px 12px 54px; position: relative; font-size: .95rem; }
+  .steps li::before { content: counter(s); position: absolute; left: 14px; top: 12px; width: 27px; height: 27px;
+                      border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+                      font: 700 .95rem var(--serif); display: grid; place-items: center; }
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 10px 16px; margin-bottom: 8px; }
+  summary { cursor: pointer; font-weight: 600; font-size: .95rem; }
+  details p { color: var(--sub); margin: .5em 0 .2em; font-size: .93rem; }
 
-  details { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-            padding: 14px 18px; margin-bottom: 10px; }
-  summary { cursor: pointer; font-weight: 600; }
-  details p { color: var(--sub); margin: .6em 0 0; }
+  .quote { position: relative; padding: 70px 0; text-align: center;
+           background: linear-gradient(rgba(11,22,48,.72), rgba(11,22,48,.72)), url("img/sunflowers.jpg") center / cover; }
+  blockquote { font: italic clamp(1.3rem, 3vw, 1.85rem)/1.35 var(--serif); margin: 0; }
+  blockquote cite { display: block; font-size: .95rem; color: var(--sub); margin-top: 8px; }
 
-  blockquote { font: italic clamp(1.3rem, 3vw, 1.9rem)/1.4 var(--serif); margin: 0; text-align: center; }
-  blockquote cite { display: block; font-size: 1rem; color: var(--sub); margin-top: 10px; }
+  footer { padding: 30px 0 40px; color: var(--sub); font-size: .85rem; }
+  footer p { margin: 0 0 8px; }
 
-  footer { padding: 40px 0 60px; color: var(--sub); font-size: .92rem; border-top: 1px solid var(--border); }
-  footer .credits { columns: 2 260px; margin-top: 14px; }
-
-  @media (max-width: 640px) {
-    header.hero { background: linear-gradient(rgba(11,22,48,.86), rgba(11,22,48,.86)), url("img/hero.jpg") center / cover; }
-    section { padding: 60px 0; }
+  @media (max-width: 860px) {
+    .features, .shots { grid-template-columns: 1fr 1fr; }
+    .eyes { grid-template-columns: repeat(3, 1fr); }
+    .gallery { grid-template-columns: 1fr 1fr; }
+    .two { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    header.hero { background: linear-gradient(rgba(11,22,48,.85), rgba(11,22,48,.85)), url("img/hero.jpg") center / cover; }
+    .features, .shots { grid-template-columns: 1fr; }
+    .eyes { grid-template-columns: 1fr 1fr; }
+    section { padding: 40px 0; }
   }
 </style>
 </head>
@@ -147,18 +176,20 @@
 
 <header class="hero">
   <div class="wrap">
-    <img class="logo" src="https://raw.githubusercontent.com/xilla420/ColorblindHelper/main/assets/icon.png" alt="Colorblind Helper app icon" width="92" height="92">
-    <h1>Colorblind Helper</h1>
+    <div class="brand">
+      <img src="https://raw.githubusercontent.com/xilla420/ColorblindHelper/main/assets/icon.png" alt="Colorblind Helper app icon" width="68" height="68">
+      <h1>Colorblind Helper</h1>
+    </div>
     <p class="tag">Name any colour on your screen.</p>
-    <p class="lede">A free color picker overlay for color blind people and artists. Point at anything and it tells you
-      the color’s name, a plain-language description, its HEX and RGB values, and how it looks with
-      protanopia, deuteranopia and tritanopia.</p>
+    <p class="lede">A free color picker overlay for color blind people and artists. Point at anything to see its
+      name, a plain-language description, HEX and RGB values, and how it looks with protanopia,
+      deuteranopia and tritanopia.</p>
     <div class="cta">
-      <a class="btn primary" href="https://github.com/xilla420/ColorblindHelper/releases/latest/download/ColorblindHelper-Windows.exe">⬇ Download for Windows</a>
-      <a class="btn" href="https://github.com/xilla420/ColorblindHelper/releases/latest/download/ColorblindHelper-macOS.zip">⬇ Download for macOS</a>
+      <a class="btn primary" href="https://github.com/xilla420/ColorblindHelper/releases/latest/download/ColorblindHelper-Windows.exe">⬇ Windows</a>
+      <a class="btn" href="https://github.com/xilla420/ColorblindHelper/releases/latest/download/ColorblindHelper-macOS.zip">⬇ macOS</a>
       <a class="btn" href="https://github.com/xilla420/ColorblindHelper">★ Star on GitHub</a>
     </div>
-    <p class="muted" style="margin-top:14px;font-size:.92rem">Free &amp; open source (MIT) · No account · No tracking · Works offline</p>
+    <p class="fine">Free &amp; open source (MIT) · No account · No tracking · Works offline</p>
   </div>
   <span class="caption">The Starry Night · Vincent van Gogh, 1889</span>
 </header>
@@ -166,79 +197,86 @@
 <main>
 <section>
   <div class="wrap">
+    <p class="eyebrow">What it does</p>
     <h2>A color identifier that follows your cursor</h2>
-    <p class="muted" style="max-width:720px">Around 1 in 12 men and 1 in 200 women have a color vision deficiency.
-      Colorblind Helper sits quietly in your tray and labels colors anywhere: in web pages, photos, charts, games,
-      design tools and paintings.</p>
-    <div class="grid" style="margin-top:26px">
-      <div class="card"><h3>Color names, instantly</h3><p>Closest named color (CIEDE2000 matching), HEX and RGB values in a small overlay next to the cursor.</p></div>
-      <div class="card"><h3>Descriptive mode</h3><p>Plain words like “light muted teal” or “dark brown”, plus HSL, HSV, CMYK and WCAG contrast ratios.</p></div>
-      <div class="card"><h3>Through other eyes</h3><p>See how a color reads with protanopia, deuteranopia, tritanopia or achromatopsia, so you know what could be confused.</p></div>
-      <div class="card"><h3>An artist’s palette</h3><p>Every color you copy is saved as a paint dab. Reuse it with a click or export it to GIMP, Krita or Inkscape.</p></div>
-      <div class="card"><h3>Live in a painting</h3><p>Themes drawn from Van Gogh’s Starry Night, Sunflowers, Irises, Almond Blossom and more.</p></div>
-      <div class="card"><h3>Made to stay out of the way</h3><p>Click-through overlay, global hotkeys, run at startup, about 1% CPU while idle. Windows &amp; macOS.</p></div>
+    <p class="lead">Around 1 in 12 men and 1 in 200 women have a color vision deficiency. Colorblind Helper sits
+      in your tray and labels colors anywhere: web pages, photos, charts, games, design tools and paintings.</p>
+    <div class="features">
+      <div class="feature"><h3>Color names, instantly</h3><p>Closest named color (CIEDE2000), HEX and RGB values beside the cursor.</p></div>
+      <div class="feature"><h3>Descriptive mode</h3><p>Plain words like “light muted teal”, plus HSL, HSV, CMYK and WCAG contrast.</p></div>
+      <div class="feature"><h3>Through other eyes</h3><p>Protanopia, deuteranopia, tritanopia and achromatopsia simulations.</p></div>
+      <div class="feature"><h3>An artist’s palette</h3><p>Copied colors become paint dabs. Reuse them, or export to GIMP, Krita or Inkscape.</p></div>
+      <div class="feature"><h3>Live in a painting</h3><p>Themes from Starry Night, Sunflowers, Irises, Almond Blossom and more.</p></div>
+      <div class="feature"><h3>Out of your way</h3><p>Click-through overlay, global hotkeys, starts at login if you want, about 1% CPU.</p></div>
     </div>
   </div>
 </section>
 
 <section class="alt" id="vision">
   <div class="wrap">
+    <p class="eyebrow">Self-Portrait, 1887 · Art Institute of Chicago</p>
     <h2>Vincent, through other eyes</h2>
-    <p class="muted" style="max-width:740px">Van Gogh’s 1887 self-portrait is a good red–green test: a red beard against a
-      green ground. Here it is as each kind of colour vision might see it, simulated with the
-      Machado, Oliveira &amp; Fernandes (2009) model, the same one the app uses.</p>
+    <p class="lead">A red beard against a green ground makes a natural red–green test. Here it is as each kind of colour
+      vision might see it, simulated with the same model the app uses (Machado et al., 2009).</p>
     <div class="eyes">
-      <figure><img src="img/portrait-typical.jpg" alt="Van Gogh self-portrait with typical color vision" loading="lazy" width="420" height="300"><figcaption><b>Typical vision</b>the original colours</figcaption></figure>
-      <figure><img src="img/portrait-protan.jpg" alt="Van Gogh self-portrait simulated with protanopia (red-blind)" loading="lazy" width="420" height="300"><figcaption><b>Protanopia</b>red-blind</figcaption></figure>
-      <figure><img src="img/portrait-deutan.jpg" alt="Van Gogh self-portrait simulated with deuteranopia (green-blind)" loading="lazy" width="420" height="300"><figcaption><b>Deuteranopia</b>green-blind · most common</figcaption></figure>
-      <figure><img src="img/portrait-tritan.jpg" alt="Van Gogh self-portrait simulated with tritanopia (blue-blind)" loading="lazy" width="420" height="300"><figcaption><b>Tritanopia</b>blue-blind</figcaption></figure>
-      <figure><img src="img/portrait-achroma.jpg" alt="Van Gogh self-portrait simulated with achromatopsia (no color)" loading="lazy" width="420" height="300"><figcaption><b>Achromatopsia</b>light and shade only</figcaption></figure>
+      <figure><div class="frame"><img src="img/portrait-typical.jpg" alt="Van Gogh self-portrait with typical color vision" width="420" height="300" loading="lazy"></div><figcaption><b>Typical</b>original colours</figcaption></figure>
+      <figure><div class="frame"><img src="img/portrait-protan.jpg" alt="Van Gogh self-portrait simulated with protanopia (red-blind)" width="420" height="300" loading="lazy"></div><figcaption><b>Protanopia</b>red-blind</figcaption></figure>
+      <figure><div class="frame"><img src="img/portrait-deutan.jpg" alt="Van Gogh self-portrait simulated with deuteranopia (green-blind)" width="420" height="300" loading="lazy"></div><figcaption><b>Deuteranopia</b>green-blind · most common</figcaption></figure>
+      <figure><div class="frame"><img src="img/portrait-tritan.jpg" alt="Van Gogh self-portrait simulated with tritanopia (blue-blind)" width="420" height="300" loading="lazy"></div><figcaption><b>Tritanopia</b>blue-blind</figcaption></figure>
+      <figure><div class="frame"><img src="img/portrait-achroma.jpg" alt="Van Gogh self-portrait simulated with achromatopsia (no color)" width="420" height="300" loading="lazy"></div><figcaption><b>Achromatopsia</b>light &amp; shade only</figcaption></figure>
     </div>
   </div>
 </section>
 
-<section id="screenshots">
+<section id="gallery">
   <div class="wrap">
-    <h2>Screenshots</h2>
+    <p class="eyebrow">The gallery</p>
+    <h2>An overlay dressed in Vincent’s colours</h2>
+    <div class="gallery">
+      <figure style="margin:0"><div class="frame"><img src="img/overlay-starry.jpg" alt="Color overlay in the Starry Night theme naming a golden yellow" width="560" height="360" loading="lazy"></div><p class="label">The Starry Night</p></figure>
+      <figure style="margin:0"><div class="frame"><img src="img/overlay-sunflowers.jpg" alt="Color overlay in the Sunflowers theme naming Sienna" width="560" height="360" loading="lazy"></div><p class="label">Sunflowers</p></figure>
+      <figure style="margin:0"><div class="frame"><img src="img/overlay-irises.jpg" alt="Color overlay in the Irises theme naming a violet" width="560" height="360" loading="lazy"></div><p class="label">Irises</p></figure>
+      <figure style="margin:0"><div class="frame"><img src="img/overlay-almond.jpg" alt="Color overlay in the Almond Blossom theme naming a rose pink" width="560" height="360" loading="lazy"></div><p class="label">Almond Blossom</p></figure>
+    </div>
     <div class="shots">
-      <img src="settings-starry.png" alt="Colorblind Helper settings window in the Starry Night theme" loading="lazy">
-      <img src="vision.png" alt="Color vision page showing protanopia and deuteranopia simulations" loading="lazy">
-      <img src="palette.png" alt="Artist's palette of saved colors" loading="lazy">
-      <img src="overlays.png" alt="The color overlay in every theme, compact and descriptive" loading="lazy">
+      <figure style="margin:0"><div class="frame"><img src="settings-starry.png" alt="Settings window in the Starry Night theme with painting theme picker" width="880" height="650" loading="lazy"></div><p class="label">Choose a painting to live in</p></figure>
+      <figure style="margin:0"><div class="frame"><img src="vision.png" alt="Color vision settings with protanopia and deuteranopia previews" width="880" height="650" loading="lazy"></div><p class="label">Pick which vision types to simulate</p></figure>
+      <figure style="margin:0"><div class="frame"><img src="palette.png" alt="Artist's palette of saved colors as paint dabs" width="880" height="650" loading="lazy"></div><p class="label">Keep every colour you copy</p></figure>
     </div>
   </div>
 </section>
 
-<section class="alt" id="how">
-  <div class="wrap">
-    <h2>How to identify a color in 3 steps</h2>
-    <ol class="steps">
-      <li><b>Download</b> the app for <a href="https://github.com/xilla420/ColorblindHelper/releases/latest">Windows or macOS</a> and run it. There’s nothing to install.</li>
-      <li><b>Point</b> your mouse at any color. The overlay shows its name, HEX and RGB values.</li>
-      <li><b>Press Ctrl+Shift+D</b> for descriptive mode or <b>Ctrl+Shift+C</b> to copy the color into your palette.</li>
-    </ol>
+<section class="alt" id="faq">
+  <div class="wrap two">
+    <div>
+      <p class="eyebrow">Get started</p>
+      <h2>Three steps</h2>
+      <ol class="steps">
+        <li><b>Download</b> for <a href="https://github.com/xilla420/ColorblindHelper/releases/latest">Windows or macOS</a> and run it. There’s nothing to install.</li>
+        <li><b>Point</b> at any color. The overlay shows its name, HEX and RGB.</li>
+        <li><b>Ctrl+Shift+D</b> for descriptive mode · <b>Ctrl+Shift+C</b> to copy into your palette.</li>
+      </ol>
+    </div>
+    <div>
+      <p class="eyebrow">Questions</p>
+      <h2>FAQ</h2>
+      <details><summary>How can a color blind person tell what color something is on screen?</summary>
+        <p>Run Colorblind Helper and move your mouse over anything. A small overlay next to the cursor shows the color’s name (for example “Crimson”), a plain-language description such as “Vivid red”, and its HEX and RGB values.</p></details>
+      <details><summary>Is it free?</summary>
+        <p>Yes. It’s free and open source under the MIT license.</p></details>
+      <details><summary>Which types of color blindness does it simulate?</summary>
+        <p>Protanopia (red-blind), deuteranopia (green-blind), tritanopia (blue-blind) and achromatopsia (no color). You can switch any combination on or off.</p></details>
+      <details><summary>Can color blind artists use it while painting digitally?</summary>
+        <p>Yes. The overlay works over any app, including Photoshop, Krita, Clip Studio and your browser. Copied colors land in a palette you can export as a .gpl file.</p></details>
+      <details><summary>Does it work on macOS?</summary>
+        <p>Yes. Open the app, then allow Screen Recording in System Settings → Privacy &amp; Security so it can read the color under the cursor.</p></details>
+      <details><summary>Does it collect any data?</summary>
+        <p>No. It runs entirely on your computer, needs no account and makes no network requests.</p></details>
+    </div>
   </div>
 </section>
 
-<section id="faq">
-  <div class="wrap">
-    <h2>Questions</h2>
-    <details><summary>How can a color blind person tell what color something is on screen?</summary>
-      <p>Run Colorblind Helper and move your mouse over anything. A small overlay next to the cursor shows the color’s name (for example “Crimson”), a plain-language description such as “Vivid red”, and its HEX and RGB values.</p></details>
-    <details><summary>Is it free?</summary>
-      <p>Yes. It’s free and open source under the MIT license.</p></details>
-    <details><summary>Which types of color blindness does it simulate?</summary>
-      <p>Protanopia (red-blind), deuteranopia (green-blind), tritanopia (blue-blind) and achromatopsia (no color). You can switch any combination on or off.</p></details>
-    <details><summary>Can color blind artists use it while painting digitally?</summary>
-      <p>Yes. The overlay works over any app, including Photoshop, Krita, Clip Studio and your browser. Copied colors land in a palette you can export as a .gpl file.</p></details>
-    <details><summary>Does it work on macOS?</summary>
-      <p>Yes. Open the app, then allow Screen Recording in System Settings → Privacy &amp; Security so it can read the color under the cursor.</p></details>
-    <details><summary>Does it collect any data?</summary>
-      <p>No. It runs entirely on your computer, needs no account and makes no network requests.</p></details>
-  </div>
-</section>
-
-<section class="alt">
+<section class="quote">
   <div class="wrap">
     <blockquote>“Colour expresses something in itself.”<cite>— Vincent van Gogh, letter to Theo, 1885</cite></blockquote>
   </div>
@@ -247,20 +285,12 @@
 
 <footer>
   <div class="wrap">
-    <p><b>Colorblind Helper</b> · <a href="https://github.com/xilla420/ColorblindHelper">Source on GitHub</a> ·
+    <p><b>Colorblind Helper</b> · <a href="https://github.com/xilla420/ColorblindHelper">Source</a> ·
       <a href="https://github.com/xilla420/ColorblindHelper/releases">Releases</a> ·
       <a href="https://github.com/xilla420/ColorblindHelper/issues">Report a bug</a> · MIT license</p>
-    <p>Paintings by Vincent van Gogh (1853–1890), public domain, scans via Wikimedia Commons:</p>
-    <div class="credits">
-      The Starry Night (1889), Museum of Modern Art<br>
-      Café Terrace at Night (1888), Kröller-Müller Museum<br>
-      Irises (1889), J. Paul Getty Museum<br>
-      Sunflowers (1888), National Gallery, London<br>
-      Almond Blossom (1890), Van Gogh Museum<br>
-      Wheat Field with Cypresses (1889), Metropolitan Museum of Art<br>
-      The Bedroom (1888), Van Gogh Museum<br>
-      Self-Portrait (1887), Art Institute of Chicago
-    </div>
+    <p>Paintings by Vincent van Gogh (1853–1890), public domain, scans via Wikimedia Commons: The Starry Night (MoMA) ·
+      Café Terrace at Night (Kröller-Müller) · Irises (Getty) · Sunflowers (National Gallery) · Almond Blossom &amp;
+      The Bedroom (Van Gogh Museum) · Wheat Field with Cypresses (The Met) · Self-Portrait 1887 (Art Institute of Chicago).</p>
   </div>
 </footer>
 </body>

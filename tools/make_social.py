@@ -67,6 +67,29 @@ def social(path: str) -> None:
     img.save(path)
 
 
+def overlay_tiles(folder: str) -> None:
+    """Each overlay theme sitting on its own painting, for the landing page."""
+    samples = [("starry", (242, 201, 76)), ("sunflowers", (169, 86, 26)),
+               ("irises", (155, 140, 240)), ("almond", (201, 120, 127))]
+    for key, rgb in samples:
+        W, H = 560, 360
+        img = QImage(W, H, QImage.Format.Format_ARGB32_Premultiplied)
+        p = QPainter(img)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        p.drawImage(QRectF(0, 0, W, H), cover_image(key, W, H, 1.2))
+        p.fillRect(img.rect(), QColor(0, 0, 0, 40))
+        s = Settings()
+        s.descriptive_mode = True
+        s.overlay_theme = key
+        s.sim_achroma = False
+        r = OverlayRenderer(s)
+        size = r.layout(color_info(rgb))
+        p.translate((W - size.width()) / 2, (H - size.height()) / 2)
+        r.paint(p, 0.0)
+        p.end()
+        img.save(os.path.join(folder, f"overlay-{key}.jpg"), "JPG", 84)
+
+
 def hero(path: str) -> None:
     img = cover_image("starry", 1800, 760, 1.0)
     img.save(path, "JPG", 82)
@@ -81,6 +104,7 @@ if __name__ == "__main__":
         os.path.join(ROOT, "docs", "social-preview.jpg"), "JPG", 88)  # GitHub limit: 1 MB
     for key in ("sunflowers", "almond", "irises", "cafe", "portrait"):
         cover_image(key, 640, 420).save(os.path.join(ROOT, "docs", "img", f"{key}.jpg"), "JPG", 80)
+    overlay_tiles(os.path.join(ROOT, "docs", "img"))
     from colorblind_helper.paintings import simulated_image
     for kind in (None, "protan", "deutan", "tritan", "achroma"):
         simulated_image("portrait", kind, 420, 300).save(
