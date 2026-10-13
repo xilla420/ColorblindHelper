@@ -1,0 +1,23 @@
+name: Wrong colour name or description
+description: The overlay named or described a colour in a way that seems off
+labels: [color-naming]
+body:
+  - type: input
+    id: hex
+    attributes:
+      label: HEX code
+      placeholder: "#DC143C"
+    validations:
+      required: true
+  - type: input
+    id: got
+    attributes:
+      label: What the app said
+      placeholder: "Vivid pink"
+    validations:
+      required: true
+  - type: input
+    id: expected
+    attributes:
+      label: What you'd expect
+      placeholder: "Vivid red"

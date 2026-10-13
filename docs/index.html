@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colorblind Helper – Free Color Picker &amp; Color Name Overlay for Color Blind People</title>
+<meta name="description" content="Colorblind Helper names the color under your mouse cursor in an always-on-top overlay. Free, open-source color identifier for color blind people and artists, with protanopia, deuteranopia and tritanopia simulation. Windows &amp; macOS.">
+<meta name="keywords" content="color blind, colour blind, color blindness tool, color identifier, color name finder, color picker, eyedropper, screen color picker, deuteranopia, protanopia, tritanopia, achromatopsia, color vision deficiency, accessibility, colorblind artists, Van Gogh">
+<link rel="canonical" href="https://xilla420.github.io/ColorblindHelper/">
+<meta name="theme-color" content="#0b1630">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/xilla420/ColorblindHelper/main/assets/icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Colorblind Helper">
+<meta property="og:title" content="Colorblind Helper – name any color on your screen">
+<meta property="og:description" content="Free color picker overlay for color blind people and artists. Point at anything to see its color name, HEX, RGB and how it looks with protanopia, deuteranopia and tritanopia.">
+<meta property="og:url" content="https://xilla420.github.io/ColorblindHelper/">
+<meta property="og:image" content="https://xilla420.github.io/ColorblindHelper/social-preview.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="Colorblind Helper overlay naming the color Crimson over The Starry Night">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Colorblind Helper – name any color on your screen">
+<meta name="twitter:description" content="Free, open-source color identifier for color blind people and artists. Windows &amp; macOS.">
+<meta name="twitter:image" content="https://xilla420.github.io/ColorblindHelper/social-preview.jpg">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Colorblind Helper",
+  "alternateName": "Color Blind Helper",
+  "description": "Always-on-top overlay that names the color under your cursor, with color vision deficiency simulation (protanopia, deuteranopia, tritanopia, achromatopsia) and an artist's palette.",
+  "applicationCategory": "UtilitiesApplication",
+  "applicationSubCategory": "Accessibility",
+  "operatingSystem": "Windows 10, Windows 11, macOS",
+  "softwareVersion": "1.1.0",
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "downloadUrl": "https://github.com/xilla420/ColorblindHelper/releases/latest",
+  "codeRepository": "https://github.com/xilla420/ColorblindHelper",
+  "image": "https://xilla420.github.io/ColorblindHelper/social-preview.jpg",
+  "screenshot": "https://xilla420.github.io/ColorblindHelper/settings-starry.png",
+  "author": {"@type": "Person", "name": "xilla420", "url": "https://github.com/xilla420"}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "How can a color blind person tell what color something is on screen?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Run Colorblind Helper and move your mouse over anything: a small overlay next to the cursor shows the color's name (for example \"Crimson\"), a plain-language description such as \"Vivid red\", and its HEX and RGB values."}},
+    {"@type": "Question", "name": "Is Colorblind Helper free?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Yes. It is free and open source under the MIT license, with downloads for Windows and macOS on GitHub."}},
+    {"@type": "Question", "name": "Which types of color blindness does it support?",
+     "acceptedAnswer": {"@type": "Answer", "text": "It simulates protanopia (red-blind), deuteranopia (green-blind), tritanopia (blue-blind) and achromatopsia (no color) using the Machado, Oliveira and Fernandes (2009) model, so you can see which colors could be confused."}},
+    {"@type": "Question", "name": "Can color blind artists use it while painting digitally?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Yes. The overlay works over any app, including Photoshop, Krita, Clip Studio and your browser. Copied colors land in a palette you can export as a .gpl file."}},
+    {"@type": "Question", "name": "Does it work on macOS?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Yes. Download the macOS zip, open the app, and allow Screen Recording in System Settings, Privacy & Security, so it can read the color under the cursor."}}
+  ]
+}
+</script>
+
+<style>
+  :root {
+    --bg: #0b1630; --surface: #12224a; --surface2: #1a3062; --border: #2c4880;
+    --text: #f6edcf; --sub: #b3c1df; --accent: #f2c94c; --accent-ink: #13162b;
+    --serif: Georgia, "Palatino Linotype", Palatino, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 var(--sans); }
+  a { color: var(--accent); }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  h1, h2, h3 { font-family: var(--serif); line-height: 1.15; margin: 0 0 .5em; }
+  h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); }
+  h3 { font-size: 1.2rem; }
+  .muted { color: var(--sub); }
+  .serif-i { font-family: var(--serif); font-style: italic; }
+
+  header.hero {
+    position: relative; min-height: 88vh; display: flex; align-items: center;
+    background: linear-gradient(90deg, rgba(11,22,48,.95) 0%, rgba(11,22,48,.8) 45%, rgba(11,22,48,.2) 100%),
+                url("img/hero.jpg") center / cover no-repeat;
+  }
+  .hero .wrap { padding-top: 60px; padding-bottom: 60px; }
+  .hero img.logo { width: 92px; height: 92px; margin-bottom: 22px; }
+  .hero h1 { font-size: clamp(2.6rem, 7vw, 4.6rem); }
+  .hero .tag { font-family: var(--serif); font-style: italic; color: var(--accent);
+               font-size: clamp(1.25rem, 2.6vw, 1.7rem); margin: 0 0 .6em; }
+  .hero p.lede { max-width: 560px; color: #dfe5f4; font-size: 1.1rem; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px;
+         font-weight: 600; text-decoration: none; border: 1px solid var(--border);
+         background: rgba(18,34,74,.85); color: var(--text); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn:hover { transform: translateY(-1px); }
+  .caption { position: absolute; right: 16px; bottom: 14px; font: italic 13px var(--serif);
+             background: rgba(0,0,0,.45); padding: 4px 12px; border-radius: 99px; color: #fff8e6; }
+
+  section { padding: 84px 0; }
+  section.alt { background: #0e1b3b; }
+  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+  .card h3 { color: var(--accent); }
+  .card p { margin: 0; color: var(--sub); }
+
+  .eyes { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-top: 26px; }
+  .eyes figure { margin: 0; background: var(--surface); border: 1px solid var(--border);
+                 border-radius: 14px; overflow: hidden; }
+  .eyes figcaption { padding: 10px 12px; font-size: .92rem; }
+  .eyes figcaption b { display: block; font-family: var(--serif); }
+
+  .shots { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .shots img { border-radius: 14px; border: 1px solid var(--border); }
+
+  .steps { counter-reset: s; list-style: none; padding: 0; display: grid; gap: 14px; }
+  .steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--border);
+              border-radius: 14px; padding: 16px 18px 16px 62px; position: relative; }
+  .steps li::before { content: counter(s); position: absolute; left: 18px; top: 14px;
+                      width: 30px; height: 30px; border-radius: 50%; background: var(--accent);
+                      color: var(--accent-ink); font-weight: 700; display: grid; place-items: center; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+            padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { color: var(--sub); margin: .6em 0 0; }
+
+  blockquote { font: italic clamp(1.3rem, 3vw, 1.9rem)/1.4 var(--serif); margin: 0; text-align: center; }
+  blockquote cite { display: block; font-size: 1rem; color: var(--sub); margin-top: 10px; }
+
+  footer { padding: 40px 0 60px; color: var(--sub); font-size: .92rem; border-top: 1px solid var(--border); }
+  footer .credits { columns: 2 260px; margin-top: 14px; }
+
+  @media (max-width: 640px) {
+    header.hero { background: linear-gradient(rgba(11,22,48,.86), rgba(11,22,48,.86)), url("img/hero.jpg") center / cover; }
+    section { padding: 60px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="logo" src="https://raw.githubusercontent.com/xilla420/ColorblindHelper/main/assets/icon.png" alt="Colorblind Helper app icon" width="92" height="92">
+    <h1>Colorblind Helper</h1>
+    <p class="tag">Name any colour on your screen.</p>
+    <p class="lede">A free color picker overlay for color blind people and artists. Point at anything and it tells you
+      the color’s name, a plain-language description, its HEX and RGB values, and how it looks with
+      protanopia, deuteranopia and tritanopia.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/xilla420/ColorblindHelper/releases/latest/download/ColorblindHelper-Windows.exe">⬇ Download for Windows</a>
+      <a class="btn" href="https://github.com/xilla420/ColorblindHelper/releases/latest/download/ColorblindHelper-macOS.zip">⬇ Download for macOS</a>
+      <a class="btn" href="https://github.com/xilla420/ColorblindHelper">★ Star on GitHub</a>
+    </div>
+    <p class="muted" style="margin-top:14px;font-size:.92rem">Free &amp; open source (MIT) · No account · No tracking · Works offline</p>
+  </div>
+  <span class="caption">The Starry Night · Vincent van Gogh, 1889</span>
+</header>
+
+<main>
+<section>
+  <div class="wrap">
+    <h2>A color identifier that follows your cursor</h2>
+    <p class="muted" style="max-width:720px">Around 1 in 12 men and 1 in 200 women have a color vision deficiency.
+      Colorblind Helper sits quietly in your tray and labels colors anywhere: in web pages, photos, charts, games,
+      design tools and paintings.</p>
+    <div class="grid" style="margin-top:26px">
+      <div class="card"><h3>Color names, instantly</h3><p>Closest named color (CIEDE2000 matching), HEX and RGB values in a small overlay next to the cursor.</p></div>
+      <div class="card"><h3>Descriptive mode</h3><p>Plain words like “light muted teal” or “dark brown”, plus HSL, HSV, CMYK and WCAG contrast ratios.</p></div>
+      <div class="card"><h3>Through other eyes</h3><p>See how a color reads with protanopia, deuteranopia, tritanopia or achromatopsia, so you know what could be confused.</p></div>
+      <div class="card"><h3>An artist’s palette</h3><p>Every color you copy is saved as a paint dab. Reuse it with a click or export it to GIMP, Krita or Inkscape.</p></div>
+      <div class="card"><h3>Live in a painting</h3><p>Themes drawn from Van Gogh’s Starry Night, Sunflowers, Irises, Almond Blossom and more.</p></div>
+      <div class="card"><h3>Made to stay out of the way</h3><p>Click-through overlay, global hotkeys, run at startup, about 1% CPU while idle. Windows &amp; macOS.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="vision">
+  <div class="wrap">
+    <h2>Vincent, through other eyes</h2>
+    <p class="muted" style="max-width:740px">Van Gogh’s 1887 self-portrait is a good red–green test: a red beard against a
+      green ground. Here it is as each kind of colour vision might see it, simulated with the
+      Machado, Oliveira &amp; Fernandes (2009) model, the same one the app uses.</p>
+    <div class="eyes">
+      <figure><img src="img/portrait-typical.jpg" alt="Van Gogh self-portrait with typical color vision" loading="lazy" width="420" height="300"><figcaption><b>Typical vision</b>the original colours</figcaption></figure>
+      <figure><img src="img/portrait-protan.jpg" alt="Van Gogh self-portrait simulated with protanopia (red-blind)" loading="lazy" width="420" height="300"><figcaption><b>Protanopia</b>red-blind</figcaption></figure>
+      <figure><img src="img/portrait-deutan.jpg" alt="Van Gogh self-portrait simulated with deuteranopia (green-blind)" loading="lazy" width="420" height="300"><figcaption><b>Deuteranopia</b>green-blind · most common</figcaption></figure>
+      <figure><img src="img/portrait-tritan.jpg" alt="Van Gogh self-portrait simulated with tritanopia (blue-blind)" loading="lazy" width="420" height="300"><figcaption><b>Tritanopia</b>blue-blind</figcaption></figure>
+      <figure><img src="img/portrait-achroma.jpg" alt="Van Gogh self-portrait simulated with achromatopsia (no color)" loading="lazy" width="420" height="300"><figcaption><b>Achromatopsia</b>light and shade only</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="screenshots">
+  <div class="wrap">
+    <h2>Screenshots</h2>
+    <div class="shots">
+      <img src="settings-starry.png" alt="Colorblind Helper settings window in the Starry Night theme" loading="lazy">
+      <img src="vision.png" alt="Color vision page showing protanopia and deuteranopia simulations" loading="lazy">
+      <img src="palette.png" alt="Artist's palette of saved colors" loading="lazy">
+      <img src="overlays.png" alt="The color overlay in every theme, compact and descriptive" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="how">
+  <div class="wrap">
+    <h2>How to identify a color in 3 steps</h2>
+    <ol class="steps">
+      <li><b>Download</b> the app for <a href="https://github.com/xilla420/ColorblindHelper/releases/latest">Windows or macOS</a> and run it. There’s nothing to install.</li>
+      <li><b>Point</b> your mouse at any color. The overlay shows its name, HEX and RGB values.</li>
+      <li><b>Press Ctrl+Shift+D</b> for descriptive mode or <b>Ctrl+Shift+C</b> to copy the color into your palette.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>Questions</h2>
+    <details><summary>How can a color blind person tell what color something is on screen?</summary>
+      <p>Run Colorblind Helper and move your mouse over anything. A small overlay next to the cursor shows the color’s name (for example “Crimson”), a plain-language description such as “Vivid red”, and its HEX and RGB values.</p></details>
+    <details><summary>Is it free?</summary>
+      <p>Yes. It’s free and open source under the MIT license.</p></details>
+    <details><summary>Which types of color blindness does it simulate?</summary>
+      <p>Protanopia (red-blind), deuteranopia (green-blind), tritanopia (blue-blind) and achromatopsia (no color). You can switch any combination on or off.</p></details>
+    <details><summary>Can color blind artists use it while painting digitally?</summary>
+      <p>Yes. The overlay works over any app, including Photoshop, Krita, Clip Studio and your browser. Copied colors land in a palette you can export as a .gpl file.</p></details>
+    <details><summary>Does it work on macOS?</summary>
+      <p>Yes. Open the app, then allow Screen Recording in System Settings → Privacy &amp; Security so it can read the color under the cursor.</p></details>
+    <details><summary>Does it collect any data?</summary>
+      <p>No. It runs entirely on your computer, needs no account and makes no network requests.</p></details>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <blockquote>“Colour expresses something in itself.”<cite>— Vincent van Gogh, letter to Theo, 1885</cite></blockquote>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>Colorblind Helper</b> · <a href="https://github.com/xilla420/ColorblindHelper">Source on GitHub</a> ·
+      <a href="https://github.com/xilla420/ColorblindHelper/releases">Releases</a> ·
+      <a href="https://github.com/xilla420/ColorblindHelper/issues">Report a bug</a> · MIT license</p>
+    <p>Paintings by Vincent van Gogh (1853–1890), public domain, scans via Wikimedia Commons:</p>
+    <div class="credits">
+      The Starry Night (1889), Museum of Modern Art<br>
+      Café Terrace at Night (1888), Kröller-Müller Museum<br>
+      Irises (1889), J. Paul Getty Museum<br>
+      Sunflowers (1888), National Gallery, London<br>
+      Almond Blossom (1890), Van Gogh Museum<br>
+      Wheat Field with Cypresses (1889), Metropolitan Museum of Art<br>
+      The Bedroom (1888), Van Gogh Museum<br>
+      Self-Portrait (1887), Art Institute of Chicago
+    </div>
+  </div>
+</footer>
+</body>
+</html>

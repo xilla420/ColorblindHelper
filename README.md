@@ -2,16 +2,31 @@
   <img src="assets/icon.png" width="120" alt="Colorblind Helper icon">
 </p>
 
-<h1 align="center">Colorblind Helper</h1>
+<h1 align="center">Colorblind Helper: color picker &amp; color name overlay for color blind people</h1>
 
 <p align="center">
   <i>For colour-blind artists, with love from Vincent's palette.</i><br>
-  A small always-on-top overlay that <b>names the colour under your cursor</b>. Windows &amp; macOS.
+  A free, open-source <b>color identifier</b> that <b>names the color under your mouse cursor</b>.
+  It also simulates <b>protanopia, deuteranopia and tritanopia</b>. Windows &amp; macOS.
 </p>
 
 <p align="center">
-  <a href="https://github.com/xilla420/ColorblindHelper/releases/latest"><b>⬇ Download the latest release</b></a>
+  <a href="https://github.com/xilla420/ColorblindHelper/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/xilla420/ColorblindHelper?style=flat-square&color=f2c94c&labelColor=0b1630"></a>
+  <a href="https://github.com/xilla420/ColorblindHelper/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/xilla420/ColorblindHelper/total?style=flat-square&color=7fa7d9&labelColor=0b1630"></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS-a9561a?style=flat-square&labelColor=0b1630">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/xilla420/ColorblindHelper?style=flat-square&color=4c7a36&labelColor=0b1630"></a>
+  <a href="https://github.com/xilla420/ColorblindHelper/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/xilla420/ColorblindHelper?style=flat-square&color=f2c94c&labelColor=0b1630"></a>
 </p>
+
+<p align="center">
+  <a href="https://github.com/xilla420/ColorblindHelper/releases/latest/download/ColorblindHelper-Windows.exe"><b>⬇ Windows</b></a> ·
+  <a href="https://github.com/xilla420/ColorblindHelper/releases/latest/download/ColorblindHelper-macOS.zip"><b>⬇ macOS</b></a> ·
+  <a href="https://xilla420.github.io/ColorblindHelper/"><b>Website</b></a>
+</p>
+
+> About 1 in 12 men and 1 in 200 women have some form of color blindness (color vision deficiency).
+> Colorblind Helper sits in your tray and labels colors anywhere on screen: in web pages, photos, charts,
+> games, design tools and digital paintings.
 
 <p align="center">
   <img src="docs/settings-starry.png" width="49%" alt="Settings in the Starry Night theme">
@@ -80,6 +95,33 @@ python main.py
 | Show / hide overlay            | Ctrl+Shift+H  | Esc (hide)       |
 
 You can also right-click the tray icon or the overlay for the menu. Double-click the tray icon to open settings.
+
+## FAQ
+
+**How can a color blind person tell what color something is on screen?**
+Run Colorblind Helper and move your mouse over it. The overlay shows the color's name (for example *Crimson*), a
+plain-language description (*Vivid red*), and its HEX and RGB values.
+
+**Which kinds of color blindness does it cover?**
+It covers protanopia/protanomaly (red), deuteranopia/deuteranomaly (green, the most common), tritanopia (blue) and
+achromatopsia (no color). The simulations use the Machado et al. (2009) model.
+
+**Can I use it as an eyedropper or screen color picker?**
+Yes. Freeze the color with Space or Ctrl+Shift+F, then copy the HEX or RGB value. Copied colors are kept in your
+palette.
+
+**Is it useful for designers checking accessibility?**
+Yes. Descriptive mode shows WCAG contrast ratios against white and black, and the simulations show which
+colors would be confused.
+
+**Does it collect data?**
+No. It runs entirely offline, with no account and no telemetry.
+
+## Alternatives & related
+
+You might also know tools such as Color Oracle (a full-screen color blindness simulator), Sim Daltonism (macOS) and
+the eyedroppers built into design apps. Colorblind Helper is different because it's a **follow-the-cursor
+color name overlay** that combines identification, simulation and an artist's palette in one small app.
 
 ## The paintings
 
